@@ -1,0 +1,97 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width"><meta name="generator" content="Astro v7.3.3"><meta name="description" content="梳理 AutoPIPE 组件库与材料库的职责、SRC 到 LIB 的转换流程，并以 AUTOPIPE.src 为例分析七张数据表及其固定格式。"><meta name="theme-color" content="#fbfdff"><link rel="icon" type="image/png" href="/favicon.png"><link rel="canonical" href="https://zuoco.github.io/blog/autopipe-03-component-library/"><link rel="alternate" type="application/rss+xml" title="阿左 RSS" href="/rss.xml"><meta property="og:type" content="article"><meta property="og:title" content="AutoPIPE（03）— 组件库：从 SRC 到 LIB · 阿左"><meta property="og:description" content="梳理 AutoPIPE 组件库与材料库的职责、SRC 到 LIB 的转换流程，并以 AUTOPIPE.src 为例分析七张数据表及其固定格式。"><meta property="og:url" content="https://zuoco.github.io/blog/autopipe-03-component-library/"><meta property="og:image" content="https://zuoco.github.io/images/hero-mountains-v3.png"><meta name="twitter:card" content="summary_large_image"><title>AutoPIPE（03）— 组件库：从 SRC 到 LIB · 阿左</title><script>
+      (() => {
+        const saved = localStorage.getItem('theme');
+        const theme = saved === 'dark' || saved === 'light' ? saved : (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.dataset.theme = theme;
+      })();
+    </script><script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"AutoPIPE（03）— 组件库：从 SRC 到 LIB","description":"梳理 AutoPIPE 组件库与材料库的职责、SRC 到 LIB 的转换流程，并以 AUTOPIPE.src 为例分析七张数据表及其固定格式。","datePublished":"2026-11-01T00:00:00.000Z","dateModified":"2026-11-01T00:00:00.000Z","inLanguage":"zh-CN","url":"https://zuoco.github.io/blog/autopipe-03-component-library/"}</script><link rel="stylesheet" href="/_astro/BaseLayout.Dj3uPNNS.css"></head><body><header class="site-header" data-pagefind-ignore><div class="container header-inner"><a class="brand" href="/" aria-label="阿左首页">阿左</a><nav class="site-nav" id="site-nav" aria-label="主导航"><a class="nav-link" href="/">首页</a><a class="nav-link" href="/blog/" aria-current="page">博客</a><a class="nav-link" href="/projects/">项目</a><a class="nav-link" href="/topics/">专题</a><a class="nav-link" href="/about/">关于</a></nav><div class="header-actions"><a class="icon-button" href="/search/" aria-label="搜索"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.2-3.2"></path></svg></a><button class="icon-button" id="theme-toggle" type="button" aria-label="切换深色模式"><span class="theme-icon-moon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A8.3 8.3 0 1 1 11.2 3 6.5 6.5 0 0 0 21 12.8Z"></path></svg></span><span class="theme-icon-sun" hidden><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.66 6.34l1.41-1.41"></path></svg></span></button><button class="icon-button menu-button" id="menu-toggle" type="button" aria-label="打开导航" aria-controls="site-nav" aria-expanded="false"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"></path></svg></button></div></div></header><script type="module">var e=document.querySelector(`#menu-toggle`),t=document.querySelector(`#site-nav`);e?.addEventListener(`click`,()=>{let n=t?.dataset.open!==`true`;t&&(t.dataset.open=String(n)),e.setAttribute(`aria-expanded`,String(n))});var n=document.querySelector(`#theme-toggle`),r=()=>{let e=document.documentElement.dataset.theme===`dark`;document.querySelector(`.theme-icon-moon`)?.toggleAttribute(`hidden`,e),document.querySelector(`.theme-icon-sun`)?.toggleAttribute(`hidden`,!e),n?.setAttribute(`aria-label`,e?`切换浅色模式`:`切换深色模式`)};r(),n?.addEventListener(`click`,()=>{let e=document.documentElement.dataset.theme===`dark`?`light`:`dark`;document.documentElement.dataset.theme=e,localStorage.setItem(`theme`,e),r()});</script><main class="page-main"><div class="article-shell"><article class="article-content" data-pagefind-body><header class="article-header"><span class="eyebrow">AutoPIPE</span><h1 data-pagefind-meta="title">AutoPIPE（03）— 组件库：从 SRC 到 LIB</h1><div class="article-meta"><time datetime="2026-11-01T00:00:00.000Z">2026-11-01</time><span class="tag">AutoPIPE</span><span class="tag">组件库</span><span class="tag">文件格式</span></div><p class="article-description">梳理 AutoPIPE 组件库与材料库的职责、SRC 到 LIB 的转换流程，并以 AUTOPIPE.src 为例分析七张数据表及其固定格式。</p></header><p>General Model Options 中的 Libraries 分成 Component 和 Material 两项。前者提供尺寸规格，后者提供材料性能。选中组件库后，还要在建模时继续选择公称直径、Schedule、阀门类型等，才能取得具体规格的数据。</p>
+<p><img alt="Component 下拉列表中的组件库" loading="lazy" decoding="async" width="772" height="289" src="/_astro/component-libraries.DsuzWbxn_LeDEJ.webp"></p>
+<h2 id="两类库的职责">两类库的职责</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>库</th><th>典型数据</th><th>使用位置</th></tr></thead><tbody><tr><td>Component</td><td>外径、壁厚、阀门尺寸和重量、保温及外护材料等</td><td>管道与管件属性输入</td></tr><tr><td>Material</td><td>密度、泊松比、弹性模量、热膨胀、强度及规范相关材料数据</td><td>刚度、自重、热变形和校核计算</td></tr></tbody></table>
+<p>例如，在组件库中按“公称直径 + Schedule”查询，可以得到实际外径和壁厚；选择材料牌号后，再从材料库取得物性和强度数据。两类库独立选择，但材料库需要与模型采用的规范及版本匹配。</p>
+<h2 id="src-是源数据lib-供程序加载">SRC 是源数据，LIB 供程序加载</h2>
+<p>AutoPIPE 的这两类库采用专用文件：</p>
+<div class="expressive-code"><link rel="stylesheet" href="/_astro/ec.z7juk.css"><script type="module" src="/_astro/ec.0vx5m.js"></script><figure class="frame"><figcaption class="header"></figcaption><pre data-language="text"><code><div class="ec-line"><div class="code"><span style="--0:#24292e;--1:#e1e4e8">AUTOPIPE.SRC  →  库编译工具  →  AUTOPIPE.LIB</span></div></div><div class="ec-line"><div class="code"><span style="--0:#24292e;--1:#e1e4e8">DNVM2021.SRC  →  库编译工具  →  DNVM2021.LIB</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="AUTOPIPE.SRC  →  库编译工具  →  AUTOPIPE.LIBDNVM2021.SRC  →  库编译工具  →  DNVM2021.LIB"><div></div></button></div></figure></div>
+<p><code>.SRC</code> 是按固定格式组织的 ASCII 文本，可以查看和维护；<code>.LIB</code> 是转换后供软件读取的数据文件。这里的 <code>.LIB</code> 是工程数据资源，与 C/C++ 链接库没有关系。</p>
+<p>Bentley 要求修改 <code>.SRC</code> 后重新生成 <code>.LIB</code>。从文件用途看，这个阶段把可编辑的表定义和记录转换为程序使用的专用格式，可以减少加载时的文本解释工作，也能提前发现部分格式问题。它不能保证录入的工程数值正确。</p>
+<p>公开资料没有给出 <code>.LIB</code> 的完整二进制布局。不能仅凭“编译”二字就断定其中使用了哪种索引或压缩算法。AutoPIPE 其他模块还可能使用 <code>.mdb</code> 等文件，它们与这里的库格式应分别讨论。</p>
+<p>库的位置随版本变化。可以先在 <code>Tools → Settings → Preferences</code> 中查看 <code>Program Data Path</code>。例如某些版本的 <code>.LIB</code> 位于 <code>C:\ProgramData\Bentley\AutoPIPE 2025\</code>，源文件在其 <code>Libraries</code> 子目录；另一些版本把源文件放在安装目录中。</p>
+<p><img alt="AutoPIPE 2025 中 AUTOPIPE.src 与 AUTOPIPE.lib 的文件位置" loading="lazy" decoding="async" width="2004" height="373" src="/_astro/component-source.CyL81nUs_Z1TokaH.webp"></p>
+<h2 id="autopipesrc-的七张表">AUTOPIPE.src 的七张表</h2>
+<p>本组笔记保存的 <code>AUTOPIPE.src</code> 以 <code>07</code> 开头，后面共有七张表：</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>表标识</th><th>内容</th></tr></thead><tbody><tr><td><code>PIPE</code></td><td>公称直径、实际外径、Schedule 和壁厚</td></tr><tr><td><code>INSL</code></td><td>保温材料与密度</td></tr><tr><td><code>CLAD</code></td><td>保温外护材料与密度</td></tr><tr><td><code>VLV1</code></td><td>阀门类型、规格、重量和长度等</td></tr><tr><td><code>FLTP</code></td><td>标准法兰数据</td></tr><tr><td><code>FLNB</code></td><td>大直径 B 系列法兰数据</td></tr><tr><td><code>FLD1</code></td><td>流体体积模量和比重</td></tr></tbody></table>
+<p>这些是当前文件的内容，不代表每个组件库都收录相同的表和记录。</p>
+<h2 id="表定义与记录分开">表定义与记录分开</h2>
+<p>每张表先描述如何读取数据，再列出实际记录。以 <code>PIPE</code> 表为例，格式定义中可以看到：</p>
+<div class="expressive-code"><figure class="frame"><figcaption class="header"></figcaption><pre data-language="text"><code><div class="ec-line"><div class="code"><span style="--0:#24292e;--1:#e1e4e8">06 1 R (A1,F6.3)  00 00 01</span></div></div><div class="ec-line"><div class="code"><span style="--0:#24292e;--1:#e1e4e8">27Nominal Diameter :</span></div></div><div class="ec-line"><div class="code"><span style="--0:#24292e;--1:#e1e4e8">04 1 C (A1,A4)    00 00 02</span></div></div><div class="ec-line"><div class="code"><span style="--0:#24292e;--1:#e1e4e8">00   Pipe Schedule :</span></div></div><div class="ec-line"><div class="code"><span style="--0:#24292e;--1:#e1e4e8">02 08 03 02 01 37 8.3         Actual O.D. :</span></div></div><div class="ec-line"><div class="code"><span style="--0:#24292e;--1:#e1e4e8">02 08 03 02 00 10 8.3         Wall Thick. :</span></div></div><div class="ec-line"><div class="code"><span style="--0:#24292e;--1:#e1e4e8">02 08 04 02 01 02 8.4        Special O.D. :</span></div></div><div class="ec-line"><div class="code"><span style="--0:#24292e;--1:#e1e4e8">(1X,F6.3)</span></div></div><div class="ec-line"><div class="code"><span style="--0:#24292e;--1:#e1e4e8">(10X,F5.3,4X,F6.3)</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="06 1 R (A1,F6.3)  00 00 0127Nominal Diameter :04 1 C (A1,A4)    00 00 0200   Pipe Schedule :02 08 03 02 01 37 8.3         Actual O.D. :02 08 03 02 00 10 8.3         Wall Thick. :02 08 04 02 01 02 8.4        Special O.D. :(1X,F6.3)(10X,F5.3,4X,F6.3)"><div></div></button></div></figure></div>
+<p><code>A</code>、<code>F</code> 等格式记号描述字符和数值字段的读取方式，字段定义还引用单位编号。这类文件依赖列位置和格式宽度，不能按普通的空格分隔表格处理。</p>
+<p>下面是紧接着的部分规格记录，保留原始缩进：</p>
+<div class="expressive-code"><figure class="frame"><figcaption class="header"></figcaption><pre data-language="text"><code><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#24292e;--1:#e1e4e8"> </span></span><span style="--0:#24292e;--1:#e1e4e8">0.125</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#24292e;--1:#e1e4e8">  </span></span><span style="--0:#24292e;--1:#e1e4e8">0.405</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#24292e;--1:#e1e4e8"> </span></span><span style="--0:#24292e;--1:#e1e4e8">STD</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#24292e;--1:#e1e4e8">          </span></span><span style="--0:#24292e;--1:#e1e4e8">0.068</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#24292e;--1:#e1e4e8"> </span></span><span style="--0:#24292e;--1:#e1e4e8">10S</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#24292e;--1:#e1e4e8">          </span></span><span style="--0:#24292e;--1:#e1e4e8">0.049</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#24292e;--1:#e1e4e8"> </span></span><span style="--0:#24292e;--1:#e1e4e8">40</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#24292e;--1:#e1e4e8">          </span></span><span style="--0:#24292e;--1:#e1e4e8">0.068</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code=" 0.125  0.405 STD          0.068 10S          0.049 40          0.068"><div></div></button></div></figure></div>
+<p>这一组记录对应公称尺寸 <code>0.125</code>、实际外径 <code>0.405</code>，后面分别列出 <code>STD</code>、<code>10S</code>、<code>40</code> 等 Schedule 及其壁厚。例如 <code>STD</code> 对应 <code>0.068</code>。</p>
+<p>这些尺寸采用源库的英寸单位，不能因为模型界面选择 SI，就直接把 <code>0.405</code> 当成毫米。当前 <code>AUTOPIPE.src</code> 没有显式 <code>UNITS</code> 区段，读取时还需要遵守该格式规定的基准单位；下一篇材料库则带有自己的单位定义。</p>
+<p>从数据组织看，查询链是“库 → 表 → 规格记录 → 字段值”。界面的下拉选择沿这条链定位数据，随后再按模型单位显示。</p>
+<h2 id="参考资料">参考资料</h2>
+<ul>
+<li>本组笔记中的 <code>AUTOPIPE.src</code>，以上表名和摘录均来自该文件。</li>
+<li><a href="https://bentleysystems.service-now.com/community?id=kb_article&#x26;sysparm_article=KB0038372">Bentley：组件库的修改与编译，KB0038372</a></li>
+<li><a href="https://bentleysystems.service-now.com/community?id=kb_article_view&#x26;sysparm_article=KB0038146">Bentley：SRC 和 LIB 文件位置，KB0038146</a></li>
+</ul>
+<hr>
+<p><a href="/blog/autopipe-02-piping-codes/">上一篇：管道规范</a> · <a href="/topics/bentley-autopipe/">系列目录</a> · <a href="/blog/autopipe-04-material-library/">下一篇：材料库</a></p><footer class="article-footer"><a class="section-link" href="/blog/">← 返回全部文章</a></footer></article><aside class="article-toc" data-pagefind-ignore><h2>文章目录</h2><ol><li data-depth="2"><a href="#两类库的职责">两类库的职责</a></li><li data-depth="2"><a href="#src-是源数据lib-供程序加载">SRC 是源数据，LIB 供程序加载</a></li><li data-depth="2"><a href="#autopipesrc-的七张表">AUTOPIPE.src 的七张表</a></li><li data-depth="2"><a href="#表定义与记录分开">表定义与记录分开</a></li><li data-depth="2"><a href="#参考资料">参考资料</a></li></ol></aside></div><script type="module" src="/_astro/_slug_.astro_astro_type_script_index_0_lang.DF_Wvxve.js"></script></main><footer class="site-footer" data-pagefind-ignore><div class="container footer-inner"><span>© 2026 阿左 · 记录技术，探索未来。</span><div class="footer-links"><a class="social-link" href="https://github.com/zuoco" target="_blank" rel="noreferrer"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-3.9c.04-1-.35-2-1-2.7 3.2-.35 6.6-1.6 6.6-7.1A5.5 5.5 0 0 0 19.1 4.4 5.1 5.1 0 0 0 19 1s-1.2-.4-4 1.5a13.7 13.7 0 0 0-7 0C5.2.6 4 1 4 1a5.1 5.1 0 0 0-.1 3.4 5.5 5.5 0 0 0-1.5 3.9c0 5.5 3.4 6.7 6.6 7.1-.5.5-.8 1.1-1 1.8-.1.7-.1 3.8-.1 4.8M8 19c-3 .9-3-1.7-4.2-2.1"></path></svg>GitHub</a><a class="social-link" href="/rss.xml"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11a9 9 0 0 1 9 9M4 4a16 16 0 0 1 16 16"></path><circle cx="5" cy="19" r="1" fill="currentColor"></circle></svg>RSS</a><span>做一个更好的工程师</span></div></div></footer></body></html>

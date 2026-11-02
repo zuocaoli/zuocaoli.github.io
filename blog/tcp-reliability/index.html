@@ -1,0 +1,48 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width"><meta name="generator" content="Astro v7.3.3"><meta name="description" content="1. 数据分片与序列号 TCP将应用层的数据流分割成适合网络传输的报文段（Segment），每个报文段包含一个序列号（Sequence Number），标识该段数据在整体数据流中的位置。 - 乱序重组 ： 即使数据包通过…"><meta name="theme-color" content="#fbfdff"><link rel="icon" type="image/png" href="/favicon.png"><link rel="canonical" href="https://zuoco.github.io/blog/tcp-reliability/"><link rel="alternate" type="application/rss+xml" title="阿左 RSS" href="/rss.xml"><meta property="og:type" content="article"><meta property="og:title" content="TCP是如何保证可靠性的 · 阿左"><meta property="og:description" content="1. 数据分片与序列号 TCP将应用层的数据流分割成适合网络传输的报文段（Segment），每个报文段包含一个序列号（Sequence Number），标识该段数据在整体数据流中的位置。 - 乱序重组 ： 即使数据包通过…"><meta property="og:url" content="https://zuoco.github.io/blog/tcp-reliability/"><meta property="og:image" content="https://zuoco.github.io/images/hero-mountains-v3.png"><meta name="twitter:card" content="summary_large_image"><title>TCP是如何保证可靠性的 · 阿左</title><script>
+      (() => {
+        const saved = localStorage.getItem('theme');
+        const theme = saved === 'dark' || saved === 'light' ? saved : (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.dataset.theme = theme;
+      })();
+    </script><script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"TCP是如何保证可靠性的","description":"1. 数据分片与序列号 TCP将应用层的数据流分割成适合网络传输的报文段（Segment），每个报文段包含一个序列号（Sequence Number），标识该段数据在整体数据流中的位置。 - 乱序重组 ： 即使数据包通过…","datePublished":"2023-06-23T00:00:00.000Z","dateModified":"2023-06-23T00:00:00.000Z","inLanguage":"zh-CN","url":"https://zuoco.github.io/blog/tcp-reliability/"}</script><link rel="stylesheet" href="/_astro/BaseLayout.Dj3uPNNS.css"></head><body><header class="site-header" data-pagefind-ignore><div class="container header-inner"><a class="brand" href="/" aria-label="阿左首页">阿左</a><nav class="site-nav" id="site-nav" aria-label="主导航"><a class="nav-link" href="/">首页</a><a class="nav-link" href="/blog/" aria-current="page">博客</a><a class="nav-link" href="/projects/">项目</a><a class="nav-link" href="/topics/">专题</a><a class="nav-link" href="/about/">关于</a></nav><div class="header-actions"><a class="icon-button" href="/search/" aria-label="搜索"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.2-3.2"></path></svg></a><button class="icon-button" id="theme-toggle" type="button" aria-label="切换深色模式"><span class="theme-icon-moon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A8.3 8.3 0 1 1 11.2 3 6.5 6.5 0 0 0 21 12.8Z"></path></svg></span><span class="theme-icon-sun" hidden><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.66 6.34l1.41-1.41"></path></svg></span></button><button class="icon-button menu-button" id="menu-toggle" type="button" aria-label="打开导航" aria-controls="site-nav" aria-expanded="false"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"></path></svg></button></div></div></header><script type="module">var e=document.querySelector(`#menu-toggle`),t=document.querySelector(`#site-nav`);e?.addEventListener(`click`,()=>{let n=t?.dataset.open!==`true`;t&&(t.dataset.open=String(n)),e.setAttribute(`aria-expanded`,String(n))});var n=document.querySelector(`#theme-toggle`),r=()=>{let e=document.documentElement.dataset.theme===`dark`;document.querySelector(`.theme-icon-moon`)?.toggleAttribute(`hidden`,e),document.querySelector(`.theme-icon-sun`)?.toggleAttribute(`hidden`,!e),n?.setAttribute(`aria-label`,e?`切换浅色模式`:`切换深色模式`)};r(),n?.addEventListener(`click`,()=>{let e=document.documentElement.dataset.theme===`dark`?`light`:`dark`;document.documentElement.dataset.theme=e,localStorage.setItem(`theme`,e),r()});</script><main class="page-main"><div class="article-shell"><article class="article-content" data-pagefind-body><header class="article-header"><span class="eyebrow">操作系统</span><h1 data-pagefind-meta="title">TCP是如何保证可靠性的</h1><div class="article-meta"><time datetime="2023-06-23T00:00:00.000Z">2023-06-23</time><span class="tag">TCP</span><span class="tag">网络协议原理与设计</span></div><p class="article-description">1. 数据分片与序列号 TCP将应用层的数据流分割成适合网络传输的报文段（Segment），每个报文段包含一个序列号（Sequence Number），标识该段数据在整体数据流中的位置。 - 乱序重组 ： 即使数据包通过…</p></header><p>TCP可靠性可以总结为 6 个方面：</p>
+<p><strong>1. 数据分片与序列号</strong><br>
+TCP将应用层的数据流分割成适合网络传输的报文段（Segment），每个报文段包含一个序列号（Sequence Number），标识该段数据在整体数据流中的位置。</p>
+<ul>
+<li><strong>乱序重组</strong>： 即使数据包通过不同路径到达，接收方也能根据序列号重新排序。</li>
+<li><strong>去重</strong>： 通过序列号识别并丢弃重复的数据包。</li>
+<li><strong>重排</strong>： 接收方按序号重组数据后，按顺序交给应用层。</li>
+</ul>
+<div class="expressive-code"><link rel="stylesheet" href="/_astro/ec.z7juk.css"><script type="module" src="/_astro/ec.0vx5m.js"></script><figure class="frame"><figcaption class="header"></figcaption><pre data-language="plaintext"><code><div class="ec-line"><div class="code"><span style="--0:#24292e;--1:#e1e4e8">示例：</span></div></div><div class="ec-line"><div class="code">
+</div></div><div class="ec-line"><div class="code"><span style="--0:#24292e;--1:#e1e4e8">发送方发送数据 "Hello"，初始序列号为100，每个字符占1字节：</span></div></div><div class="ec-line"><div class="code">
+</div></div><div class="ec-line"><div class="code"><span style="--0:#24292e;--1:#e1e4e8">报文1：Seq=100, Data="H"</span></div></div><div class="ec-line"><div class="code"><span style="--0:#24292e;--1:#e1e4e8">报文2：Seq=101, Data="e"</span></div></div><div class="ec-line"><div class="code"><span style="--0:#24292e;--1:#e1e4e8">...</span></div></div><div class="ec-line"><div class="code"><span style="--0:#24292e;--1:#e1e4e8">接收方返回确认号（ACK=105），表示期望下一个字节是105。</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="示例：发送方发送数据 &#x22;Hello&#x22;，初始序列号为100，每个字符占1字节：报文1：Seq=100, Data=&#x22;H&#x22;报文2：Seq=101, Data=&#x22;e&#x22;...接收方返回确认号（ACK=105），表示期望下一个字节是105。"><div></div></button></div></figure></div>
+<p><strong>2. 确认应答（ACK）机制</strong><br>
+接收方每收到一个报文段，会返回一个确认报文（ACK），其中包含期望接收的下一个字节的序列号。</p>
+<ul>
+<li>确保发送方知道哪些数据已被正确接收。</li>
+<li>发送方仅需重传未被确认的数据段。</li>
+</ul>
+<div class="expressive-code"><figure class="frame"><figcaption class="header"></figcaption><pre data-language="plaintext"><code><div class="ec-line"><div class="code"><span style="--0:#24292e;--1:#e1e4e8">示例：</span></div></div><div class="ec-line"><div class="code">
+</div></div><div class="ec-line"><div class="code"><span style="--0:#24292e;--1:#e1e4e8">若接收方收到 Seq=100 的数据，会返回 ACK=101，表示“已收到100，期待101”。</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="示例：若接收方收到 Seq=100 的数据，会返回 ACK=101，表示“已收到100，期待101”。"><div></div></button></div></figure></div>
+<p><strong>3. 超时重传</strong>
+见《报文重传》。</p>
+<p><strong>4. 滑动窗口</strong></p>
+<ul>
+<li>
+<p>流量控制
+接收方通过TCP头部的**窗口字段（Window Size）**告知发送方当前可接收的数据量（接收窗口 rwnd）。<br>
+发送方根据 rwnd 动态调整发送速率，避免接收方缓冲区溢出。</p>
+</li>
+<li>
+<p>拥塞控制
+根据一定的算法控制发送速率。<br>
+发送方根据网络状态动态调整发送窗口（拥塞窗口 cwnd），避免网络过载。<br>
+实际发送窗口大小为 min(rwnd, cwnd)。</p>
+</li>
+</ul>
+<p><strong>5. 校验和</strong></p>
+<ul>
+<li><strong>数据完整性校验</strong>：TCP头部和数据部分均包含校验和，接收方通过校验和验证数据是否在传输中损坏。</li>
+<li><strong>丢弃损坏数据</strong>：若校验失败，接收方丢弃该报文段，并等待发送方重传。</li>
+</ul>
+<p><strong>6. 连接管理</strong>
+也就是三次握手与四次挥手。</p><footer class="article-footer"><a class="section-link" href="/blog/">← 返回全部文章</a></footer></article></div><script type="module" src="/_astro/_slug_.astro_astro_type_script_index_0_lang.DF_Wvxve.js"></script></main><footer class="site-footer" data-pagefind-ignore><div class="container footer-inner"><span>© 2026 阿左 · 记录技术，探索未来。</span><div class="footer-links"><a class="social-link" href="https://github.com/zuoco" target="_blank" rel="noreferrer"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-3.9c.04-1-.35-2-1-2.7 3.2-.35 6.6-1.6 6.6-7.1A5.5 5.5 0 0 0 19.1 4.4 5.1 5.1 0 0 0 19 1s-1.2-.4-4 1.5a13.7 13.7 0 0 0-7 0C5.2.6 4 1 4 1a5.1 5.1 0 0 0-.1 3.4 5.5 5.5 0 0 0-1.5 3.9c0 5.5 3.4 6.7 6.6 7.1-.5.5-.8 1.1-1 1.8-.1.7-.1 3.8-.1 4.8M8 19c-3 .9-3-1.7-4.2-2.1"></path></svg>GitHub</a><a class="social-link" href="/rss.xml"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11a9 9 0 0 1 9 9M4 4a16 16 0 0 1 16 16"></path><circle cx="5" cy="19" r="1" fill="currentColor"></circle></svg>RSS</a><span>做一个更好的工程师</span></div></div></footer></body></html>

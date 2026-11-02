@@ -1,0 +1,106 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width"><meta name="generator" content="Astro v7.3.3"><meta name="description" content="流式协议 TCP提供一种可靠传输方式，通过序列号和包重传确认机制保证数据包的有序，不会丢包或包乱序，并且数据一定被正确发到目的地。如果我们使用UDP协议，但又不能接受丢包，那就要在UDP的基础去现类似TCP的有序和可靠传…"><meta name="theme-color" content="#fbfdff"><link rel="icon" type="image/png" href="/favicon.png"><link rel="canonical" href="https://zuoco.github.io/blog/application-protocol-design/"><link rel="alternate" type="application/rss+xml" title="阿左 RSS" href="/rss.xml"><meta property="og:type" content="article"><meta property="og:title" content="应用层协议设计的总结 · 阿左"><meta property="og:description" content="流式协议 TCP提供一种可靠传输方式，通过序列号和包重传确认机制保证数据包的有序，不会丢包或包乱序，并且数据一定被正确发到目的地。如果我们使用UDP协议，但又不能接受丢包，那就要在UDP的基础去现类似TCP的有序和可靠传…"><meta property="og:url" content="https://zuoco.github.io/blog/application-protocol-design/"><meta property="og:image" content="https://zuoco.github.io/images/hero-mountains-v3.png"><meta name="twitter:card" content="summary_large_image"><title>应用层协议设计的总结 · 阿左</title><script>
+      (() => {
+        const saved = localStorage.getItem('theme');
+        const theme = saved === 'dark' || saved === 'light' ? saved : (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.dataset.theme = theme;
+      })();
+    </script><script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"应用层协议设计的总结","description":"流式协议 TCP提供一种可靠传输方式，通过序列号和包重传确认机制保证数据包的有序，不会丢包或包乱序，并且数据一定被正确发到目的地。如果我们使用UDP协议，但又不能接受丢包，那就要在UDP的基础去现类似TCP的有序和可靠传…","datePublished":"2024-10-23T00:00:00.000Z","dateModified":"2024-10-23T00:00:00.000Z","inLanguage":"zh-CN","url":"https://zuoco.github.io/blog/application-protocol-design/"}</script><link rel="stylesheet" href="/_astro/BaseLayout.Dj3uPNNS.css"></head><body><header class="site-header" data-pagefind-ignore><div class="container header-inner"><a class="brand" href="/" aria-label="阿左首页">阿左</a><nav class="site-nav" id="site-nav" aria-label="主导航"><a class="nav-link" href="/">首页</a><a class="nav-link" href="/blog/" aria-current="page">博客</a><a class="nav-link" href="/projects/">项目</a><a class="nav-link" href="/topics/">专题</a><a class="nav-link" href="/about/">关于</a></nav><div class="header-actions"><a class="icon-button" href="/search/" aria-label="搜索"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.2-3.2"></path></svg></a><button class="icon-button" id="theme-toggle" type="button" aria-label="切换深色模式"><span class="theme-icon-moon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A8.3 8.3 0 1 1 11.2 3 6.5 6.5 0 0 0 21 12.8Z"></path></svg></span><span class="theme-icon-sun" hidden><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.66 6.34l1.41-1.41"></path></svg></span></button><button class="icon-button menu-button" id="menu-toggle" type="button" aria-label="打开导航" aria-controls="site-nav" aria-expanded="false"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"></path></svg></button></div></div></header><script type="module">var e=document.querySelector(`#menu-toggle`),t=document.querySelector(`#site-nav`);e?.addEventListener(`click`,()=>{let n=t?.dataset.open!==`true`;t&&(t.dataset.open=String(n)),e.setAttribute(`aria-expanded`,String(n))});var n=document.querySelector(`#theme-toggle`),r=()=>{let e=document.documentElement.dataset.theme===`dark`;document.querySelector(`.theme-icon-moon`)?.toggleAttribute(`hidden`,e),document.querySelector(`.theme-icon-sun`)?.toggleAttribute(`hidden`,!e),n?.setAttribute(`aria-label`,e?`切换浅色模式`:`切换深色模式`)};r(),n?.addEventListener(`click`,()=>{let e=document.documentElement.dataset.theme===`dark`?`light`:`dark`;document.documentElement.dataset.theme=e,localStorage.setItem(`theme`,e),r()});</script><main class="page-main"><div class="article-shell"><article class="article-content" data-pagefind-body><header class="article-header"><span class="eyebrow">操作系统</span><h1 data-pagefind-meta="title">应用层协议设计的总结</h1><div class="article-meta"><time datetime="2024-10-23T00:00:00.000Z">2024-10-23</time><span class="tag">网络协议原理与设计</span></div><p class="article-description">流式协议 TCP提供一种可靠传输方式，通过序列号和包重传确认机制保证数据包的有序，不会丢包或包乱序，并且数据一定被正确发到目的地。如果我们使用UDP协议，但又不能接受丢包，那就要在UDP的基础去现类似TCP的有序和可靠传…</p></header><h2 id="流式协议"><strong>流式协议</strong></h2>
+<p>  TCP提供一种可靠传输方式，通过序列号和包重传确认机制保证数据包的有序，不会丢包或包乱序，并且数据一定被正确发到目的地。如果我们使用UDP协议，但又不能接受丢包，那就要在UDP的基础去现类似TCP的有序和可靠传输机制了（例如 RTP、RUDP）。TCP作为<code>流式协议</code>，它保证数据有序送达，但是数据流中，那个字节是开始，那个字节是结束，这就不关人家的事情了，也就是说，我们从传输层拿到数据后，要自行处理数据的<code>边界</code>。</p>
+<h2 id="流的边界"><strong>流的边界</strong></h2>
+<p>关于边界问题，有两种情况：<code>粘包</code>、<code>半包</code>。</p>
+<ul>
+<li>粘包： 多个包裹连接在一起，也可能不是整数个包。</li>
+<li>半包： 只收到一个包的一部分。</li>
+</ul>
+<p>  无论是半包还是粘包问题，问题都出在<code>流的边界</code>上，常用的解决办法有3种：<code>固定包长度</code>、<code>指定包结束标志</code>、<code>封装一套协议（协议头+数据）</code>。对于数据包固定大小，当数据长度小于包长度时，需要使用特定字符填充，例如“\0”，必须和正常数据区分开。当数据报长度大于包长度时，需要分包，发送端需要分包，接收端需要组包。对于指定包的结束标志，就是使用特定的符号或者符号组合作为包结束标志，例如FTP、SMTP协议，使用“\r\n”表示结束，接受端处理包时，遇到“\r\n”就认为获取到了一个包。</p>
+<h2 id="应用层协议设计"><strong>应用层协议设计</strong></h2>
+<p>  应用层协议设计要和网络传输层解耦，协议层提供读写报文的回调函数的声明，但是函数实现交给由业务层完成，业务层需要将设计好的读写函数注册给协议层。协议层需要读写数据时直接调用读写函数即可。但是要注意，协议的读写回调需要使用非阻塞方式实现。一般情况下，网络部分也是独立的模块，业务层通过网络模块接收网络数据并将数据保存到缓存区中，然后将缓存区的使用权移交给协议层，同样协议层需要发送数据时，也要将报文的缓存区使用权移交给网络模块。</p>
+<h3 id="报文设计"><strong>报文设计</strong></h3>
+<p>报文一般会分为<code>控制报文</code>和<code>数据报文</code>。控制报文用于处理设备连接/断开、配置管理、流控制等，数据报文用于传输各种数据，报文大概的结构如下：<br>
+<img alt="" loading="lazy" decoding="async" width="1210" height="478" src="/_astro/%E6%8A%A5%E6%96%87%E7%BB%93%E6%9E%84.DUUxpNVF_NfBlb.svg"></p>
+<p>最基本的控制报文有：</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>控制报文</th><th>功能</th></tr></thead><tbody><tr><td>Hello报文</td><td>双方建立连接（TCP）后发送的第一个包是Hello报文，<br> 用于同步双方的信息，包括协议版本，软件版本等等，保证新版协议对于旧版本的兼容性</td></tr><tr><td>connect报文</td><td>客户端发送，建立用户协议的连接</td></tr><tr><td>disconnect报文</td><td>断开连接，双发都可以发送</td></tr><tr><td>其他</td><td>…</td></tr><tr><td></td><td></td></tr></tbody></table>
+<h3 id="解析器设计"><strong>解析器设计</strong></h3>
+<p>通常我们使用基于回调的状态机架构来设计解析器。协议解析器定义了一个完整的回调接口系统来处理协议的数据包解析和序列化。</p>
+<ol>
+<li><strong>解析器的核心组成</strong></li>
+</ol>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th></th><th></th></tr></thead><tbody><tr><td><strong>数据收发器</strong></td><td>一对儿回调函数，由用户提供，用于从网络接收数据，以及发送数据到网络</td></tr><tr><td><strong>数据处理器</strong></td><td>一套数据处理回调程序，由于用户提供。<br> 解析器收到完整报文并解析后将数据分发给对应的处理程序</td></tr><tr><td><strong>报文构造器</strong></td><td>由用户调用，用于构造报文并将数据添加到报文中，最后将报文添加到发送队列中</td></tr><tr><td><strong>capabilities缓存</strong></td><td>记录通讯双方的功能特性，用于兼容旧版协议</td></tr><tr><td><strong>头部缓存</strong></td><td>保存正在接收的头部（报文头部、类型头部），以及接收进度。<br> 头部决定了数据接收完成后，分发给那个处理程序</td></tr><tr><td><strong>接收缓冲区</strong></td><td>缓存接收到的数据，以及接收进度。<br> 数据接收完成后，解析器会将数据地址传递给对应的处理函数</td></tr><tr><td><strong>发送队列</strong></td><td>缓存等待发送的报文</td></tr><tr><td><strong>锁</strong></td><td>保存用户传入的互斥量，维护发送队列的线程安全</td></tr></tbody></table>
+<ol start="2">
+<li><strong>协议层的任务循环</strong></li>
+</ol>
+<ul>
+<li>协议层任务循环以读回调为入口，一旦读取到数据，解析器就进入解析流程，依次读取报文头部、类型头部、数据，直到读回调返回0。在读取报文头部后会检查头部字段是否合法，并获取报文长度，以便于确定当前报文的结束边界。</li>
+<li>如果读回调返回0时，读取到的数据小于报文长度，此时会从解析流程返回，但是数据不会丢失，因为解析器已经缓存数据，等到新数据达到可以继续读取，直到读取到整个报文。读取一个完整报文后就将数据移交给处理器程序。</li>
+<li>处理器需要在处理数据后发送响应报文，也就是将处理结果打包成对应的报文并添加到发送队列中。而解析器发送回调的任务就是将发送队列中报文缓存区移交给网络模块。也可以基于事件机制，网络模块收到数据后通知协议层读取数据，而协议层这边在发送队列有数据时通知网络模块。</li>
+</ul><footer class="article-footer"><a class="section-link" href="/blog/">← 返回全部文章</a></footer></article><aside class="article-toc" data-pagefind-ignore><h2>文章目录</h2><ol><li data-depth="2"><a href="#流式协议">流式协议</a></li><li data-depth="2"><a href="#流的边界">流的边界</a></li><li data-depth="2"><a href="#应用层协议设计">应用层协议设计</a></li><li data-depth="3"><a href="#报文设计">报文设计</a></li><li data-depth="3"><a href="#解析器设计">解析器设计</a></li></ol></aside></div><script type="module" src="/_astro/_slug_.astro_astro_type_script_index_0_lang.DF_Wvxve.js"></script></main><footer class="site-footer" data-pagefind-ignore><div class="container footer-inner"><span>© 2026 阿左 · 记录技术，探索未来。</span><div class="footer-links"><a class="social-link" href="https://github.com/zuoco" target="_blank" rel="noreferrer"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-3.9c.04-1-.35-2-1-2.7 3.2-.35 6.6-1.6 6.6-7.1A5.5 5.5 0 0 0 19.1 4.4 5.1 5.1 0 0 0 19 1s-1.2-.4-4 1.5a13.7 13.7 0 0 0-7 0C5.2.6 4 1 4 1a5.1 5.1 0 0 0-.1 3.4 5.5 5.5 0 0 0-1.5 3.9c0 5.5 3.4 6.7 6.6 7.1-.5.5-.8 1.1-1 1.8-.1.7-.1 3.8-.1 4.8M8 19c-3 .9-3-1.7-4.2-2.1"></path></svg>GitHub</a><a class="social-link" href="/rss.xml"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11a9 9 0 0 1 9 9M4 4a16 16 0 0 1 16 16"></path><circle cx="5" cy="19" r="1" fill="currentColor"></circle></svg>RSS</a><span>做一个更好的工程师</span></div></div></footer></body></html>

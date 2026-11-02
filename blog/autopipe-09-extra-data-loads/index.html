@@ -1,0 +1,157 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width"><meta name="generator" content="Astro v7.3.3"><meta name="description" content="整理 Xtra Data 工具组的功能，给出载荷与点、组件、支撑的引用方案，说明支撑两端、工况关联和反向查询的组织方式。"><meta name="theme-color" content="#fbfdff"><link rel="icon" type="image/png" href="/favicon.png"><link rel="canonical" href="https://zuoco.github.io/blog/autopipe-09-extra-data-loads/"><link rel="alternate" type="application/rss+xml" title="阿左 RSS" href="/rss.xml"><meta property="og:type" content="article"><meta property="og:title" content="AutoPIPE（09）— 附加数据：载荷与作用目标 · 阿左"><meta property="og:description" content="整理 Xtra Data 工具组的功能，给出载荷与点、组件、支撑的引用方案，说明支撑两端、工况关联和反向查询的组织方式。"><meta property="og:url" content="https://zuoco.github.io/blog/autopipe-09-extra-data-loads/"><meta property="og:image" content="https://zuoco.github.io/images/hero-mountains-v3.png"><meta name="twitter:card" content="summary_large_image"><title>AutoPIPE（09）— 附加数据：载荷与作用目标 · 阿左</title><script>
+      (() => {
+        const saved = localStorage.getItem('theme');
+        const theme = saved === 'dark' || saved === 'light' ? saved : (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.dataset.theme = theme;
+      })();
+    </script><script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"AutoPIPE（09）— 附加数据：载荷与作用目标","description":"整理 Xtra Data 工具组的功能，给出载荷与点、组件、支撑的引用方案，说明支撑两端、工况关联和反向查询的组织方式。","datePublished":"2026-11-01T00:00:00.000Z","dateModified":"2026-11-01T00:00:00.000Z","inLanguage":"zh-CN","url":"https://zuoco.github.io/blog/autopipe-09-extra-data-loads/"}</script><link rel="stylesheet" href="/_astro/BaseLayout.Dj3uPNNS.css"></head><body><header class="site-header" data-pagefind-ignore><div class="container header-inner"><a class="brand" href="/" aria-label="阿左首页">阿左</a><nav class="site-nav" id="site-nav" aria-label="主导航"><a class="nav-link" href="/">首页</a><a class="nav-link" href="/blog/" aria-current="page">博客</a><a class="nav-link" href="/projects/">项目</a><a class="nav-link" href="/topics/">专题</a><a class="nav-link" href="/about/">关于</a></nav><div class="header-actions"><a class="icon-button" href="/search/" aria-label="搜索"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.2-3.2"></path></svg></a><button class="icon-button" id="theme-toggle" type="button" aria-label="切换深色模式"><span class="theme-icon-moon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A8.3 8.3 0 1 1 11.2 3 6.5 6.5 0 0 0 21 12.8Z"></path></svg></span><span class="theme-icon-sun" hidden><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.66 6.34l1.41-1.41"></path></svg></span></button><button class="icon-button menu-button" id="menu-toggle" type="button" aria-label="打开导航" aria-controls="site-nav" aria-expanded="false"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"></path></svg></button></div></div></header><script type="module">var e=document.querySelector(`#menu-toggle`),t=document.querySelector(`#site-nav`);e?.addEventListener(`click`,()=>{let n=t?.dataset.open!==`true`;t&&(t.dataset.open=String(n)),e.setAttribute(`aria-expanded`,String(n))});var n=document.querySelector(`#theme-toggle`),r=()=>{let e=document.documentElement.dataset.theme===`dark`;document.querySelector(`.theme-icon-moon`)?.toggleAttribute(`hidden`,e),document.querySelector(`.theme-icon-sun`)?.toggleAttribute(`hidden`,!e),n?.setAttribute(`aria-label`,e?`切换浅色模式`:`切换深色模式`)};r(),n?.addEventListener(`click`,()=>{let e=document.documentElement.dataset.theme===`dark`?`light`:`dark`;document.documentElement.dataset.theme=e,localStorage.setItem(`theme`,e),r()});</script><main class="page-main"><div class="article-shell"><article class="article-content" data-pagefind-body><header class="article-header"><span class="eyebrow">AutoPIPE</span><h1 data-pagefind-meta="title">AutoPIPE（09）— 附加数据：载荷与作用目标</h1><div class="article-meta"><time datetime="2026-11-01T00:00:00.000Z">2026-11-01</time><span class="tag">AutoPIPE</span><span class="tag">载荷</span><span class="tag">支撑</span><span class="tag">数据结构</span></div><p class="article-description">整理 Xtra Data 工具组的功能，给出载荷与点、组件、支撑的引用方案，说明支撑两端、工况关联和反向查询的组织方式。</p></header><p>Xtra Data 给已有模型补充重量、集中力、位移、水动力参数和校核信息。它们的作用位置各不相同：有的关联点，有的关联整个管件，有的必须精确到某个支撑。</p>
+<p><img alt="Xtra Data：载荷、位移和局部校核参数" loading="lazy" decoding="async" width="1435" height="149" src="/_astro/extra-data-tools.DpH12OOA_23VEXz.webp"></p>
+<h2 id="工具组中的数据并非同一类型">工具组中的数据并非同一类型</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>功能</th><th>用途</th></tr></thead><tbody><tr><td>Joint Type and User SIF</td><td>指定接头类型、用户面内／面外应力增强系数等</td></tr><tr><td>Additional Weight</td><td>添加附加重量及作用位置偏移</td></tr><tr><td>Concentrated Force</td><td>在指定点施加力、力矩，并关联载荷工况</td></tr><tr><td>Imposed Displacement</td><td>定义支撑或锚固的平移、转动，如基础沉降</td></tr><tr><td>Excel Support Displacements</td><td>从 Excel 批量导入支撑位移</td></tr><tr><td>Hydrodynamic Data</td><td>设置局部阻力、惯性和升力系数等</td></tr><tr><td>Cut Short</td><td>定义安装时的冷紧、预截短或预加长量</td></tr><tr><td>User Weld Efficiency Factor</td><td>指定局部焊接相关系数</td></tr><tr><td>Member Earthquake Factor</td><td>调整管道、介质、保温等分布重量对应的地震作用</td></tr><tr><td>Point Earthquake Factor</td><td>调整阀门、法兰和附加重量等集中重量对应的地震作用</td></tr><tr><td>Reference Point</td><td>定义设备接口载荷评价的位置、坐标系和允许值</td></tr><tr><td>Piping Restraint Options</td><td>控制特定规范中受约束／非受约束类校核的选项</td></tr></tbody></table>
+<p>这个工具组同时包含直接载荷、载荷生成参数、局部修正系数和结果评价信息。数据结构可以共享目标引用方式，但不能把所有条目都当成具有同一载荷工况语义的力或位移。</p>
+<p>下面沿用上一篇的组件和几何点设计，只展开集中力、分布载荷与支撑位移的关联方案。代码属于研发示意，省略具体载荷参数和 ID 的实现。</p>
+<h2 id="先表达作用目标">先表达作用目标</h2>
+<div class="expressive-code"><link rel="stylesheet" href="/_astro/ec.z7juk.css"><script type="module" src="/_astro/ec.0vx5m.js"></script><figure class="frame"><figcaption class="header"></figcaption><pre data-language="cpp"><code><div class="ec-line"><div class="code"><span style="--0:#BF3441;--1:#F97583">struct</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#6F42C1;--1:#B392F0">PointRef</span><span style="--0:#24292E;--1:#E1E4E8"> {</span></div></div><div class="ec-line"><div class="code"><span class="indent">    </span><span style="--0:#6F42C1;--1:#B392F0">ComponentId</span><span style="--0:#24292E;--1:#E1E4E8"> componentId;</span></div></div><div class="ec-line"><div class="code"><span class="indent">    </span><span style="--0:#6F42C1;--1:#B392F0">PointId</span><span style="--0:#24292E;--1:#E1E4E8"> pointId;</span></div></div><div class="ec-line"><div class="code"><span style="--0:#24292E;--1:#E1E4E8">};</span></div></div><div class="ec-line"><div class="code">
+</div></div><div class="ec-line"><div class="code"><span style="--0:#BF3441;--1:#F97583">struct</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#6F42C1;--1:#B392F0">ComponentRef</span><span style="--0:#24292E;--1:#E1E4E8"> {</span></div></div><div class="ec-line"><div class="code"><span class="indent">    </span><span style="--0:#6F42C1;--1:#B392F0">ComponentId</span><span style="--0:#24292E;--1:#E1E4E8"> componentId;</span></div></div><div class="ec-line"><div class="code"><span style="--0:#24292E;--1:#E1E4E8">};</span></div></div><div class="ec-line"><div class="code">
+</div></div><div class="ec-line"><div class="code"><span style="--0:#BF3441;--1:#F97583">struct</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#6F42C1;--1:#B392F0">SupportRef</span><span style="--0:#24292E;--1:#E1E4E8"> {</span></div></div><div class="ec-line"><div class="code"><span class="indent">    </span><span style="--0:#6F42C1;--1:#B392F0">SupportId</span><span style="--0:#24292E;--1:#E1E4E8"> supportId;</span></div></div><div class="ec-line"><div class="code"><span style="--0:#24292E;--1:#E1E4E8">};</span></div></div><div class="ec-line"><div class="code">
+</div></div><div class="ec-line"><div class="code"><span style="--0:#BF3441;--1:#F97583">using</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#6F42C1;--1:#B392F0">LoadTarget</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#BF3441;--1:#F97583">=</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#6F42C1;--1:#B392F0">std</span><span style="--0:#24292E;--1:#E1E4E8">::variant</span><span style="--0:#BF3441;--1:#F97583">&#x3C;</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#24292E;--1:#E1E4E8">    </span></span><span style="--0:#24292E;--1:#E1E4E8">PointRef,</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#24292E;--1:#E1E4E8">    </span></span><span style="--0:#24292E;--1:#E1E4E8">ComponentRef,</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#24292E;--1:#E1E4E8">    </span></span><span style="--0:#24292E;--1:#E1E4E8">SupportRef</span></div></div><div class="ec-line"><div class="code"><span style="--0:#BF3441;--1:#F97583">></span><span style="--0:#24292E;--1:#E1E4E8">;</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="struct PointRef {    ComponentId componentId;    PointId pointId;};struct ComponentRef {    ComponentId componentId;};struct SupportRef {    SupportId supportId;};using LoadTarget = std::variant<    PointRef,    ComponentRef,    SupportRef>;"><div></div></button></div></figure></div>
+<p><code>PointRef</code> 定位某个组件内的具体几何点，<code>ComponentRef</code> 定位整个组件，<code>SupportRef</code> 定位一条支撑记录。它们回答的是“作用在哪里”。</p>
+<p>例如，在弯头 Near 点施加集中力，目标应包含弯头 ID 和 Near 点 ID。只保存“弯头 ID”，会丢失作用位置。</p>
+<h2 id="载荷记录关联目标与工况">载荷记录关联目标与工况</h2>
+<div class="expressive-code"><figure class="frame"><figcaption class="header"></figcaption><pre data-language="cpp"><code><div class="ec-line"><div class="code"><span style="--0:#BF3441;--1:#F97583">using</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#6F42C1;--1:#B392F0">LoadData</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#BF3441;--1:#F97583">=</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#6F42C1;--1:#B392F0">std</span><span style="--0:#24292E;--1:#E1E4E8">::variant</span><span style="--0:#BF3441;--1:#F97583">&#x3C;</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#24292E;--1:#E1E4E8">    </span></span><span style="--0:#24292E;--1:#E1E4E8">ConcentratedForceData,</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#24292E;--1:#E1E4E8">    </span></span><span style="--0:#24292E;--1:#E1E4E8">DistributedLoadData,</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#24292E;--1:#E1E4E8">    </span></span><span style="--0:#24292E;--1:#E1E4E8">SupportDisplacementData</span></div></div><div class="ec-line"><div class="code"><span style="--0:#BF3441;--1:#F97583">></span><span style="--0:#24292E;--1:#E1E4E8">;</span></div></div><div class="ec-line"><div class="code">
+</div></div><div class="ec-line"><div class="code"><span style="--0:#BF3441;--1:#F97583">struct</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#6F42C1;--1:#B392F0">LoadAssignment</span><span style="--0:#24292E;--1:#E1E4E8"> {</span></div></div><div class="ec-line"><div class="code"><span class="indent">    </span><span style="--0:#6F42C1;--1:#B392F0">LoadId</span><span style="--0:#24292E;--1:#E1E4E8"> id;</span></div></div><div class="ec-line"><div class="code"><span class="indent">    </span><span style="--0:#6F42C1;--1:#B392F0">LoadCaseId</span><span style="--0:#24292E;--1:#E1E4E8"> loadCaseId;</span></div></div><div class="ec-line"><div class="code"><span class="indent">    </span><span style="--0:#6F42C1;--1:#B392F0">LoadTarget</span><span style="--0:#24292E;--1:#E1E4E8"> target;</span></div></div><div class="ec-line"><div class="code"><span class="indent">    </span><span style="--0:#6F42C1;--1:#B392F0">LoadData</span><span style="--0:#24292E;--1:#E1E4E8"> data;</span></div></div><div class="ec-line"><div class="code"><span style="--0:#24292E;--1:#E1E4E8">};</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="using LoadData = std::variant<    ConcentratedForceData,    DistributedLoadData,    SupportDisplacementData>;struct LoadAssignment {    LoadId id;    LoadCaseId loadCaseId;    LoadTarget target;    LoadData data;};"><div></div></button></div></figure></div>
+<p><code>LoadData</code> 回答“施加什么”，<code>LoadTarget</code> 回答“施加到哪里”，<code>loadCaseId</code> 则把这条记录关联到载荷工况。同一个管件可以具有多条记录，各自指定工况、目标和参数。</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>场景</th><th>目标引用</th><th>关联路径</th></tr></thead><tbody><tr><td>弯头 Near 点上的集中力</td><td><code>PointRef</code></td><td>载荷 → 弯头 → 几何点</td></tr><tr><td>直管上的分布载荷</td><td><code>ComponentRef</code></td><td>载荷 → 直管</td></tr><tr><td>支撑 S1 的基础沉降</td><td><code>SupportRef</code></td><td>位移记录 → 支撑 S1 → 被支承位置</td></tr></tbody></table>
+<p>具体载荷数据还需要自己的坐标系、方向、单位及必要的作用范围。这里只展示关联关系，不能把三个目标和三种数据的任意组合都视为有效输入。</p>
+<h2 id="支撑保存被支承位置与另一端目标">支撑保存被支承位置与另一端目标</h2>
+<p>支撑的一端在管道上，另一端可能是地面、另一管道位置，或结构位置。可以分别定义：</p>
+<div class="expressive-code"><figure class="frame"><figcaption class="header"></figcaption><pre data-language="cpp"><code><div class="ec-line"><div class="code"><span style="--0:#BF3441;--1:#F97583">struct</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#6F42C1;--1:#B392F0">GroundRef</span><span style="--0:#24292E;--1:#E1E4E8"> {};</span></div></div><div class="ec-line"><div class="code">
+</div></div><div class="ec-line"><div class="code"><span style="--0:#BF3441;--1:#F97583">struct</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#6F42C1;--1:#B392F0">StructurePointRef</span><span style="--0:#24292E;--1:#E1E4E8"> {</span></div></div><div class="ec-line"><div class="code"><span class="indent">    </span><span style="--0:#6F42C1;--1:#B392F0">BeamId</span><span style="--0:#24292E;--1:#E1E4E8"> beamId;</span></div></div><div class="ec-line"><div class="code"><span class="indent">    </span><span style="--0:#6F42C1;--1:#B392F0">PointId</span><span style="--0:#24292E;--1:#E1E4E8"> pointId;</span></div></div><div class="ec-line"><div class="code"><span style="--0:#24292E;--1:#E1E4E8">};</span></div></div><div class="ec-line"><div class="code">
+</div></div><div class="ec-line"><div class="code"><span style="--0:#BF3441;--1:#F97583">using</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#6F42C1;--1:#B392F0">SupportTarget</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#BF3441;--1:#F97583">=</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#6F42C1;--1:#B392F0">std</span><span style="--0:#24292E;--1:#E1E4E8">::variant</span><span style="--0:#BF3441;--1:#F97583">&#x3C;</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#24292E;--1:#E1E4E8">    </span></span><span style="--0:#24292E;--1:#E1E4E8">GroundRef,</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#24292E;--1:#E1E4E8">    </span></span><span style="--0:#24292E;--1:#E1E4E8">PointRef,</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#24292E;--1:#E1E4E8">    </span></span><span style="--0:#24292E;--1:#E1E4E8">StructurePointRef</span></div></div><div class="ec-line"><div class="code"><span style="--0:#BF3441;--1:#F97583">></span><span style="--0:#24292E;--1:#E1E4E8">;</span></div></div><div class="ec-line"><div class="code">
+</div></div><div class="ec-line"><div class="code"><span style="--0:#BF3441;--1:#F97583">struct</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#6F42C1;--1:#B392F0">Support</span><span style="--0:#24292E;--1:#E1E4E8"> {</span></div></div><div class="ec-line"><div class="code"><span class="indent">    </span><span style="--0:#6F42C1;--1:#B392F0">SupportId</span><span style="--0:#24292E;--1:#E1E4E8"> id;</span></div></div><div class="ec-line"><div class="code"><span class="indent">    </span><span style="--0:#6F42C1;--1:#B392F0">PointRef</span><span style="--0:#24292E;--1:#E1E4E8"> supportedPoint;</span></div></div><div class="ec-line"><div class="code"><span class="indent">    </span><span style="--0:#6F42C1;--1:#B392F0">SupportTarget</span><span style="--0:#24292E;--1:#E1E4E8"> connectedTo;</span></div></div><div class="ec-line"><div class="code"><span class="indent">    </span><span style="--0:#6F42C1;--1:#B392F0">SupportProperties</span><span style="--0:#24292E;--1:#E1E4E8"> properties;</span></div></div><div class="ec-line"><div class="code"><span style="--0:#24292E;--1:#E1E4E8">};</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="struct GroundRef {};struct StructurePointRef {    BeamId beamId;    PointId pointId;};using SupportTarget = std::variant<    GroundRef,    PointRef,    StructurePointRef>;struct Support {    SupportId id;    PointRef supportedPoint;    SupportTarget connectedTo;    SupportProperties properties;};"><div></div></button></div></figure></div>
+<p><code>supportedPoint</code> 记录支承哪个管件的哪个点，<code>connectedTo</code> 记录另一端的目标，<code>properties</code> 记录约束方向、刚度及该类型支撑所需的其他参数。梁及其点由结构模型管理，这里通过 <code>BeamId</code> 引用。</p>
+<p>对于上一篇的吊架模型，支承位置对应 B01，另一端对应梁 M2 上的 M1002。两端连接关系与弹簧属性共同描述其力学作用。</p>
+<p>一个管道点可能安装多个支撑。给其中一个支撑施加强制位移时，必须保留 <code>SupportId</code>；仅靠管件 ID 和 PointId，无法区分该点上的不同支撑。</p>
+<h2 id="全局保存记录索引用于反向查询">全局保存记录，索引用于反向查询</h2>
+<p>全局模型分别管理组件、支撑和载荷。沿用上一篇的网络结构，可以组织为：</p>
+<div class="expressive-code"><figure class="frame"><figcaption class="header"></figcaption><pre data-language="cpp"><code><div class="ec-line"><div class="code"><span style="--0:#BF3441;--1:#F97583">struct</span><span style="--0:#24292E;--1:#E1E4E8"> </span><span style="--0:#6F42C1;--1:#B392F0">Model</span><span style="--0:#24292E;--1:#E1E4E8"> {</span></div></div><div class="ec-line"><div class="code"><span class="indent">    </span><span style="--0:#6F42C1;--1:#B392F0">PipingNetwork</span><span style="--0:#24292E;--1:#E1E4E8"> piping;</span></div></div><div class="ec-line"><div class="code"><span class="indent">    </span><span style="--0:#6F42C1;--1:#B392F0">StructureModel</span><span style="--0:#24292E;--1:#E1E4E8"> structure;</span></div></div><div class="ec-line"><div class="code"><span class="indent">    </span><span style="--0:#6F42C1;--1:#B392F0">SupportMap</span><span style="--0:#24292E;--1:#E1E4E8"> supports;</span></div></div><div class="ec-line"><div class="code"><span class="indent">    </span><span style="--0:#6F42C1;--1:#B392F0">LoadAssignmentMap</span><span style="--0:#24292E;--1:#E1E4E8"> loads;</span></div></div><div class="ec-line"><div class="code"><span style="--0:#24292E;--1:#E1E4E8">};</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="struct Model {    PipingNetwork piping;    StructureModel structure;    SupportMap supports;    LoadAssignmentMap loads;};"><div></div></button></div></figure></div>
+<p><code>loads</code> 是载荷记录的主数据。选择一个管件时，可以通过索引汇集三类结果：直接关联组件的载荷、关联组件内部点的载荷，以及关联该组件上支撑的载荷。</p>
+<p>如果需要在组件中保留 <code>attachments</code> 以便快速访问，应保存记录引用，或把它作为可重建的派生索引。不能让组件里的附件副本与全局载荷记录各自独立修改。</p>
+<p>SIF、焊接系数等局部数据可以采用类似目标引用，但应按自身语义保存。界面都放在 Xtra Data 工具组中，并不意味着它们在模型中必须使用同一种记录类型。</p>
+<h2 id="关联时需要检查什么">关联时需要检查什么</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>检查</th><th>示例</th></tr></thead><tbody><tr><td>目标存在且归属正确</td><td>PointId 确实属于引用的 ComponentId</td></tr><tr><td>数据类型与目标匹配</td><td>支撑位移指向支撑，所选点允许施加对应载荷</td></tr><tr><td>工况有效</td><td>LoadCaseId 指向已定义且适用的载荷工况</td></tr><tr><td>支撑两端引用有效</td><td>梁、管道点或地面目标能够解析</td></tr><tr><td>删除后无悬空引用</td><td>删除组件或支撑时，处理其载荷和相关索引</td></tr></tbody></table>
+<p>几何点能被拾取，不代表它能承载所有附加数据。例如 TIP 用于定义弯头几何，应用程序必须根据对象语义决定是否允许其成为某类载荷目标。</p>
+<p>通过这些引用，组件、支撑、载荷和工况可以各自维护，又能沿稳定 ID 互相追溯。工程对象转换成分析节点和单元时，再把载荷与约束映射到对应的分析位置。</p>
+<hr>
+<p><a href="/blog/autopipe-08-network-data-model/">上一篇：管道网络数据结构</a> · <a href="/topics/bentley-autopipe/">系列目录</a></p><footer class="article-footer"><a class="section-link" href="/blog/">← 返回全部文章</a></footer></article><aside class="article-toc" data-pagefind-ignore><h2>文章目录</h2><ol><li data-depth="2"><a href="#工具组中的数据并非同一类型">工具组中的数据并非同一类型</a></li><li data-depth="2"><a href="#先表达作用目标">先表达作用目标</a></li><li data-depth="2"><a href="#载荷记录关联目标与工况">载荷记录关联目标与工况</a></li><li data-depth="2"><a href="#支撑保存被支承位置与另一端目标">支撑保存被支承位置与另一端目标</a></li><li data-depth="2"><a href="#全局保存记录索引用于反向查询">全局保存记录，索引用于反向查询</a></li><li data-depth="2"><a href="#关联时需要检查什么">关联时需要检查什么</a></li></ol></aside></div><script type="module" src="/_astro/_slug_.astro_astro_type_script_index_0_lang.DF_Wvxve.js"></script></main><footer class="site-footer" data-pagefind-ignore><div class="container footer-inner"><span>© 2026 阿左 · 记录技术，探索未来。</span><div class="footer-links"><a class="social-link" href="https://github.com/zuoco" target="_blank" rel="noreferrer"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-3.9c.04-1-.35-2-1-2.7 3.2-.35 6.6-1.6 6.6-7.1A5.5 5.5 0 0 0 19.1 4.4 5.1 5.1 0 0 0 19 1s-1.2-.4-4 1.5a13.7 13.7 0 0 0-7 0C5.2.6 4 1 4 1a5.1 5.1 0 0 0-.1 3.4 5.5 5.5 0 0 0-1.5 3.9c0 5.5 3.4 6.7 6.6 7.1-.5.5-.8 1.1-1 1.8-.1.7-.1 3.8-.1 4.8M8 19c-3 .9-3-1.7-4.2-2.1"></path></svg>GitHub</a><a class="social-link" href="/rss.xml"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11a9 9 0 0 1 9 9M4 4a16 16 0 0 1 16 16"></path><circle cx="5" cy="19" r="1" fill="currentColor"></circle></svg>RSS</a><span>做一个更好的工程师</span></div></div></footer></body></html>

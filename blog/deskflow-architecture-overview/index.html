@@ -1,0 +1,142 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width"><meta name="generator" content="Astro v7.3.3"><meta name="description" content="功能介绍 Deskflow是一款免费且开源的键盘和鼠标共享应用程序，它允许你使用单个键盘和鼠标无缝控制多台计算机。类似于软件KVM（键盘、视频、鼠标）切换器，但不含视频组件，Deskflow让你可以将光标从一台屏幕边缘移…"><meta name="theme-color" content="#fbfdff"><link rel="icon" type="image/png" href="/favicon.png"><link rel="canonical" href="https://zuoco.github.io/blog/deskflow-architecture-overview/"><link rel="alternate" type="application/rss+xml" title="阿左 RSS" href="/rss.xml"><meta property="og:type" content="article"><meta property="og:title" content="Deskflow 项目功能和整体架构介绍 · 阿左"><meta property="og:description" content="功能介绍 Deskflow是一款免费且开源的键盘和鼠标共享应用程序，它允许你使用单个键盘和鼠标无缝控制多台计算机。类似于软件KVM（键盘、视频、鼠标）切换器，但不含视频组件，Deskflow让你可以将光标从一台屏幕边缘移…"><meta property="og:url" content="https://zuoco.github.io/blog/deskflow-architecture-overview/"><meta property="og:image" content="https://zuoco.github.io/images/hero-mountains-v3.png"><meta name="twitter:card" content="summary_large_image"><title>Deskflow 项目功能和整体架构介绍 · 阿左</title><script>
+      (() => {
+        const saved = localStorage.getItem('theme');
+        const theme = saved === 'dark' || saved === 'light' ? saved : (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.dataset.theme = theme;
+      })();
+    </script><script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"Deskflow 项目功能和整体架构介绍","description":"功能介绍 Deskflow是一款免费且开源的键盘和鼠标共享应用程序，它允许你使用单个键盘和鼠标无缝控制多台计算机。类似于软件KVM（键盘、视频、鼠标）切换器，但不含视频组件，Deskflow让你可以将光标从一台屏幕边缘移…","datePublished":"2025-03-02T00:00:00.000Z","dateModified":"2025-03-02T00:00:00.000Z","inLanguage":"zh-CN","url":"https://zuoco.github.io/blog/deskflow-architecture-overview/"}</script><link rel="stylesheet" href="/_astro/BaseLayout.Dj3uPNNS.css"></head><body><header class="site-header" data-pagefind-ignore><div class="container header-inner"><a class="brand" href="/" aria-label="阿左首页">阿左</a><nav class="site-nav" id="site-nav" aria-label="主导航"><a class="nav-link" href="/">首页</a><a class="nav-link" href="/blog/" aria-current="page">博客</a><a class="nav-link" href="/projects/">项目</a><a class="nav-link" href="/topics/">专题</a><a class="nav-link" href="/about/">关于</a></nav><div class="header-actions"><a class="icon-button" href="/search/" aria-label="搜索"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.2-3.2"></path></svg></a><button class="icon-button" id="theme-toggle" type="button" aria-label="切换深色模式"><span class="theme-icon-moon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A8.3 8.3 0 1 1 11.2 3 6.5 6.5 0 0 0 21 12.8Z"></path></svg></span><span class="theme-icon-sun" hidden><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.66 6.34l1.41-1.41"></path></svg></span></button><button class="icon-button menu-button" id="menu-toggle" type="button" aria-label="打开导航" aria-controls="site-nav" aria-expanded="false"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"></path></svg></button></div></div></header><script type="module">var e=document.querySelector(`#menu-toggle`),t=document.querySelector(`#site-nav`);e?.addEventListener(`click`,()=>{let n=t?.dataset.open!==`true`;t&&(t.dataset.open=String(n)),e.setAttribute(`aria-expanded`,String(n))});var n=document.querySelector(`#theme-toggle`),r=()=>{let e=document.documentElement.dataset.theme===`dark`;document.querySelector(`.theme-icon-moon`)?.toggleAttribute(`hidden`,e),document.querySelector(`.theme-icon-sun`)?.toggleAttribute(`hidden`,!e),n?.setAttribute(`aria-label`,e?`切换浅色模式`:`切换深色模式`)};r(),n?.addEventListener(`click`,()=>{let e=document.documentElement.dataset.theme===`dark`?`light`:`dark`;document.documentElement.dataset.theme=e,localStorage.setItem(`theme`,e),r()});</script><main class="page-main"><div class="article-shell"><article class="article-content" data-pagefind-body><header class="article-header"><span class="eyebrow">开源项目解读</span><h1 data-pagefind-meta="title">Deskflow 项目功能和整体架构介绍</h1><div class="article-meta"><time datetime="2025-03-02T00:00:00.000Z">2025-03-02</time><span class="tag">DeskFlow</span></div><p class="article-description">功能介绍 Deskflow是一款免费且开源的键盘和鼠标共享应用程序，它允许你使用单个键盘和鼠标无缝控制多台计算机。类似于软件KVM（键盘、视频、鼠标）切换器，但不含视频组件，Deskflow让你可以将光标从一台屏幕边缘移…</p></header><h2 id="功能介绍">功能介绍</h2>
+<p>  Deskflow是一款免费且开源的键盘和鼠标共享应用程序，它允许你使用单个键盘和鼠标无缝控制多台计算机。类似于软件KVM（键盘、视频、鼠标）切换器，但不含视频组件，Deskflow让你可以将光标从一台屏幕边缘移出并进入另一台计算机的屏幕，键盘控制会自动跟随。</p>
+<h2 id="整体架构与模块化设计">整体架构与模块化设计</h2>
+<p>Deskflow采用客户端-服务器架构，物理设备接入端就是服务端。</p>
+<h2 id="业务分层设计">业务分层设计</h2>
+<p>Deskflow采用了清晰的分层架构设计：</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th></th><th></th></tr></thead><tbody><tr><td>应用层</td><td>GUI应用程序和命令行工具</td></tr><tr><td>业务逻辑层</td><td>客户端/服务器核心逻辑，协议处理</td></tr><tr><td>服务层</td><td>网络通信、事件系统、配置管理</td></tr><tr><td>平台抽象层</td><td>操作系统接口抽象</td></tr><tr><td>基础设施层</td><td>日志、工具类、基础数据结构</td></tr><tr><td></td><td></td></tr></tbody></table>
+<h2 id="应用代码模块化">应用代码模块化</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>组件</th><th>描述</th></tr></thead><tbody><tr><td>deskflow-gui</td><td>主图形用户界面</td></tr><tr><td>deskflow-client</td><td>接收输入事件的客户端应用程序</td></tr><tr><td>deskflow-server</td><td>发送输入事件的服务器应用程序</td></tr><tr><td>deskflow-daemon</td><td>用于系统集成的后台服务</td></tr><tr><td>deskflow-core</td><td>组件间共享的核心功能</td></tr></tbody></table>
+<h2 id="项目的核心库模块化">项目的核心库模块化</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>lib模块</th><th>功能</th></tr></thead><tbody><tr><td>arch模块</td><td>操作系统抽象层，处理平台相关的底层操作</td></tr><tr><td>base模块</td><td>基础设施模块，提供事件系统、日志、工具类等</td></tr><tr><td>net模块</td><td>网络通信模块，负责TCP/SSL连接和数据传输</td></tr><tr><td>platform模块</td><td>平台适配模块，处理不同操作系统的具体实现</td></tr><tr><td>client/server模块</td><td>客户端和服务器核心逻辑</td></tr><tr><td>deskflow模块</td><td>应用程序框架和配置管理</td></tr><tr><td></td><td></td></tr></tbody></table>
+<h2 id="软件设计思想">软件设计思想</h2>
+<h3 id="抽象化">抽象化</h3>
+<p>  项目定义了一个基础接口类IInterface作为所有<code>接口类</code>的基类，所有接口类都只包含<code>纯虚方法</code>，每个接口类会提供多个派生类，分别适配不同操作系统。通过一个Arch单例类型整合了不同操作系统的系统调用。并基于此封装了IO、事件、网络、多线等等框架，所以业务层无需关心底层实现，直接调用封装好的框架即可。</p>
+<h3 id="高内聚低耦合">高内聚低耦合</h3>
+<p><strong>高内聚</strong><br>
+项目采用清晰的分层架构，将相关功能聚集在对应的模块中。每个库模块都专注于特定的功能领域，如 base 模块负责基础事件处理和日志功能，net 模块专门处理网络通信，platform 模块集中处理平台相关功能。平台特定的实现代码按操作系统进行分组，Windows、macOS、Linux 的相关代码分别聚集在对应的文件中，这种组织方式确保了同一平台的相关功能具有高内聚性。每个模块内部的功能高度相关，例如 base 模块集中了事件处理、日志记录、作业调度等核心基础功能。</p>
+<p><strong>低耦合</strong><br>
+<code>接口与实现完全分离</code><br>
+项目大量使用抽象接口，所有接口都继承自统一的基类 IInterface，这种设计确保了依赖抽象而非具体实现，实现了低耦合。以线程接口为例，通过IArchMultithread接口定义了跨平台的统一抽象，各平台的具体实现通过继承该接口来提供功能，核心业务逻辑与平台相关代码完全解耦，如果有需要可以优化/修改平台层代码而不影响业务层代码。<br>
+<code>事件驱动的松耦合架构</code><br>
+系统采用事件队列机制实现<strong>组件间通信</strong>，通过 IEventQueue 接口定义事件处理能力。组件间通过事件进行异步交互，避免了直接依赖。<br>
+<code>网络通信的抽象化</code><br>
+网络层通过 ISocket 等接口定义统一的网络通信抽象，将具体的 TCP、SSL 实现与上层业务逻辑解耦。<br>
+<code>依赖注入</code><br>
+抽象基类 PlatformScreen 通过构造函数注入依赖，接受 IEventQueue* 参数，这也降低了组件间的耦合度。</p>
+<h3 id="重用原则">重用原则</h3>
+<p><code>模块化的库结构设计</code><br>
+项目采用了高度模块化的架构，将功能分解为多个独立的静态库，实现了代码的最大化重用。整个源码被组织成arch、base、client、common、deskflow、gui、io、mt、net、platform、server等多个库模块，每个库都有明确的职责边界，可以被多个应用程序重用。<br>
+<code>接口抽象和继承体系</code><br>
+项目建立了完整的接口抽象体系，所有接口类都继承自统一的基础接口IInterface。这种设计确保了接口的一致性，使得不同的具体实现可以通过相同的接口被重用。<br>
+<code>平台抽象层的重用设计</code><br>
+项目通过平台抽象层实现了跨平台的代码重用。例如，IPlatformScreen接口定义了平台无关的屏幕操作方法，而具体的实现则针对不同平台分别提供。构建系统根据目标平台自动选择相应的实现文件。<br>
+<code>工厂模式的应用</code><br>
+客户端和服务端都使用工厂模式来创建平台特定的屏幕实现。ClientApp::createScreen()方法根据编译时的平台宏定义，创建相应的平台实现（如MSWindowsScreen、OSXScreen、XWindowsScreen或EiScreen）。服务端也采用了相同的模式。<br>
+<code>共享组件的重用</code><br>
+项目中的核心组件如事件队列（EventQueue）、网络通信（TCPSocket）等被设计为可重用的共享组件。客户端和服务端应用程序都链接相同的基础库集合，实现了代码的高度重用。</p><footer class="article-footer"><a class="section-link" href="/blog/">← 返回全部文章</a></footer></article><aside class="article-toc" data-pagefind-ignore><h2>文章目录</h2><ol><li data-depth="2"><a href="#功能介绍">功能介绍</a></li><li data-depth="2"><a href="#整体架构与模块化设计">整体架构与模块化设计</a></li><li data-depth="2"><a href="#业务分层设计">业务分层设计</a></li><li data-depth="2"><a href="#应用代码模块化">应用代码模块化</a></li><li data-depth="2"><a href="#项目的核心库模块化">项目的核心库模块化</a></li><li data-depth="2"><a href="#软件设计思想">软件设计思想</a></li><li data-depth="3"><a href="#抽象化">抽象化</a></li><li data-depth="3"><a href="#高内聚低耦合">高内聚低耦合</a></li><li data-depth="3"><a href="#重用原则">重用原则</a></li></ol></aside></div><script type="module" src="/_astro/_slug_.astro_astro_type_script_index_0_lang.DF_Wvxve.js"></script></main><footer class="site-footer" data-pagefind-ignore><div class="container footer-inner"><span>© 2026 阿左 · 记录技术，探索未来。</span><div class="footer-links"><a class="social-link" href="https://github.com/zuoco" target="_blank" rel="noreferrer"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-3.9c.04-1-.35-2-1-2.7 3.2-.35 6.6-1.6 6.6-7.1A5.5 5.5 0 0 0 19.1 4.4 5.1 5.1 0 0 0 19 1s-1.2-.4-4 1.5a13.7 13.7 0 0 0-7 0C5.2.6 4 1 4 1a5.1 5.1 0 0 0-.1 3.4 5.5 5.5 0 0 0-1.5 3.9c0 5.5 3.4 6.7 6.6 7.1-.5.5-.8 1.1-1 1.8-.1.7-.1 3.8-.1 4.8M8 19c-3 .9-3-1.7-4.2-2.1"></path></svg>GitHub</a><a class="social-link" href="/rss.xml"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11a9 9 0 0 1 9 9M4 4a16 16 0 0 1 16 16"></path><circle cx="5" cy="19" r="1" fill="currentColor"></circle></svg>RSS</a><span>做一个更好的工程师</span></div></div></footer></body></html>

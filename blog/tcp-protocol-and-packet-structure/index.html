@@ -1,0 +1,129 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width"><meta name="generator" content="Astro v7.3.3"><meta name="description" content="TCP协议报文结构与协议特性"><meta name="theme-color" content="#fbfdff"><link rel="icon" type="image/png" href="/favicon.png"><link rel="canonical" href="https://zuoco.github.io/blog/tcp-protocol-and-packet-structure/"><link rel="alternate" type="application/rss+xml" title="阿左 RSS" href="/rss.xml"><meta property="og:type" content="article"><meta property="og:title" content="TCP协议与报文结构 · 阿左"><meta property="og:description" content="TCP协议报文结构与协议特性"><meta property="og:url" content="https://zuoco.github.io/blog/tcp-protocol-and-packet-structure/"><meta property="og:image" content="https://zuoco.github.io/images/hero-mountains-v3.png"><meta name="twitter:card" content="summary_large_image"><title>TCP协议与报文结构 · 阿左</title><script>
+      (() => {
+        const saved = localStorage.getItem('theme');
+        const theme = saved === 'dark' || saved === 'light' ? saved : (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.dataset.theme = theme;
+      })();
+    </script><script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"TCP协议与报文结构","description":"TCP协议报文结构与协议特性","datePublished":"2023-06-16T00:00:00.000Z","dateModified":"2023-06-16T00:00:00.000Z","inLanguage":"zh-CN","url":"https://zuoco.github.io/blog/tcp-protocol-and-packet-structure/"}</script><link rel="stylesheet" href="/_astro/BaseLayout.Dj3uPNNS.css"></head><body><header class="site-header" data-pagefind-ignore><div class="container header-inner"><a class="brand" href="/" aria-label="阿左首页">阿左</a><nav class="site-nav" id="site-nav" aria-label="主导航"><a class="nav-link" href="/">首页</a><a class="nav-link" href="/blog/" aria-current="page">博客</a><a class="nav-link" href="/projects/">项目</a><a class="nav-link" href="/topics/">专题</a><a class="nav-link" href="/about/">关于</a></nav><div class="header-actions"><a class="icon-button" href="/search/" aria-label="搜索"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.2-3.2"></path></svg></a><button class="icon-button" id="theme-toggle" type="button" aria-label="切换深色模式"><span class="theme-icon-moon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A8.3 8.3 0 1 1 11.2 3 6.5 6.5 0 0 0 21 12.8Z"></path></svg></span><span class="theme-icon-sun" hidden><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.66 6.34l1.41-1.41"></path></svg></span></button><button class="icon-button menu-button" id="menu-toggle" type="button" aria-label="打开导航" aria-controls="site-nav" aria-expanded="false"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"></path></svg></button></div></div></header><script type="module">var e=document.querySelector(`#menu-toggle`),t=document.querySelector(`#site-nav`);e?.addEventListener(`click`,()=>{let n=t?.dataset.open!==`true`;t&&(t.dataset.open=String(n)),e.setAttribute(`aria-expanded`,String(n))});var n=document.querySelector(`#theme-toggle`),r=()=>{let e=document.documentElement.dataset.theme===`dark`;document.querySelector(`.theme-icon-moon`)?.toggleAttribute(`hidden`,e),document.querySelector(`.theme-icon-sun`)?.toggleAttribute(`hidden`,!e),n?.setAttribute(`aria-label`,e?`切换浅色模式`:`切换深色模式`)};r(),n?.addEventListener(`click`,()=>{let e=document.documentElement.dataset.theme===`dark`?`light`:`dark`;document.documentElement.dataset.theme=e,localStorage.setItem(`theme`,e),r()});</script><main class="page-main"><div class="article-shell"><article class="article-content" data-pagefind-body><header class="article-header"><span class="eyebrow">操作系统</span><h1 data-pagefind-meta="title">TCP协议与报文结构</h1><div class="article-meta"><time datetime="2023-06-16T00:00:00.000Z">2023-06-16</time><span class="tag">TCP</span><span class="tag">网络协议原理与设计</span></div><p class="article-description">TCP协议报文结构与协议特性</p></header><h2 id="tcp报文结构">TCP报文结构</h2>
+<p>TCP头部由<code>固定头部</code>（20字节）、<code>头部选项</code>（最长40字节）组成。</p>
+<p><img alt="" loading="lazy" decoding="async" width="2205" height="755" src="/_astro/tcp.DmAVw3m4_Z2jkcwS.webp"></p>
+<h3 id="固定头部">固定头部</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>字段</th><th>功能</th></tr></thead><tbody><tr><td>32位序列号</td><td>一次TCP传输活动中，一个传输方向上，字节流中的每一个字节的编号。</td></tr><tr><td>32位确认号</td><td>用于响应对方，告诉对方收到了数据，等于序列号+1</td></tr><tr><td>4位头部长度</td><td>记录了TCP头部的长度有几个<code>32Bit</code></td></tr><tr><td>6个标志位</td><td></td></tr><tr><td>16位窗口大小</td><td>接收通告窗口（RWND），于流量控制，拥塞控制中会用到</td></tr><tr><td>16位校验和</td><td>发送端填充，接收端进行校验</td></tr><tr><td>16位紧急指针</td><td></td></tr></tbody></table>
+<p><strong>16位标志位</strong></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>标志位</th><th>功能</th></tr></thead><tbody><tr><td>URG</td><td>紧急指针是否有效</td></tr><tr><td>ACK</td><td>确认号是否有效</td></tr><tr><td>PSH</td><td>接收方应该尽快将这个报文交给应用层，这是一个数据报文</td></tr><tr><td>RST</td><td>连接复位请求</td></tr><tr><td>SYN</td><td>同步序号，用于建立连接，这是一个连接请求报文</td></tr><tr><td>FIN</td><td>这是一个close报文</td></tr></tbody></table>
+<h3 id="头部选项">头部选项</h3>
+<p>头部选项长度可变，最长40个字节，主要是用于在建立连接时，协商一些参数，确定开启那些功能。头部选项结构如下（3部分）：</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>一个Byte</th><th>一个Byte</th><th>n个Byte</th></tr></thead><tbody><tr><td>kind</td><td>length</td><td>info</td></tr><tr><td>选项类型</td><td>头部选项的长度（包括kind和length）</td><td>选项的具体信息</td></tr></tbody></table>
+<h4 id="流控相关">流控相关</h4>
+<p>流控相关的选项，只在建立TCP连接时才会发送，即SYN包中。<br>
+<code>kind=2, length=4, info占用2个Byte</code><br>
+  用于指定最大报文段长度，此时，TCP连接初始化时，双方以此协商最大报文段长度（MSS），一般这个MSS=MTU-40，这个“40”包含20字节的tcp头部和20字节的ip头部。这样一来，报文就不超过MTU的长度，也就是减少了ip分片。<br>
+<code>kind=3, length=3，info占用1个Byte</code><br>
+  窗口扩大因子，info记录移位数，用于设置RWND，例如，固定头部中的16位窗口大小是S，头部选项给的窗口扩大因子是T，那么这一次TCP连接的实际RWND大小就是:  <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo>×</mo><msup><mn>2</mn><mi>T</mi></msup><mo separator="true">,</mo><mspace width="1em"></mspace><mi>T</mi><mo>∈</mo><mo stretchy="false">[</mo><mn>0</mn><mo separator="true">,</mo><mn>14</mn><mo stretchy="false">]</mo></mrow><annotation encoding="application/x-tex">S \times 2^T,\quad T \in [0,14]</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7667em;vertical-align:-0.0833em;"></span><span class="mord mathnormal" style="margin-right:0.0576em;">S</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1.0358em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8413em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.1389em;">T</span></span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:1em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.1389em;">T</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">∈</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">[</span><span class="mord">0</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">14</span><span class="mclose">]</span></span></span></span>，也就是S左移T位。但是有一个问题，人家RWND最大才16bBit(65536)，这样一搞，不就超了吗？实际上内核是允许的，并可以通过修改 <strong>/proc/sys/net/ipv4/tcp_window_scaling</strong> 的值来启用或者关闭窗口扩大因子选项。</p>
+<h4 id="报文重传相关">报文重传相关</h4>
+<p><code>kind=4, length=2, 无info</code><br>
+  该选项在建立连接时使用，用于启用SACK选项（Selective Acknowledgment，选择性确认）。TCP协议有丢包重传的功能，假如现在发送方发送了A、B、C、D、E、F，6个报文，结果从B开始丢包了，此时TCP模块会重传A之后的所有报文，开启SACK功能后，TCP模块只重传那些丢失的报文，至于如何确认那些报文丢失了，就是kind=5选项的工作了。<br>
+<code>kind=5, ..., ...</code><br>
+  这个是SACK实际工作选项，也就是丢包时会用到，这个选项会发送丢包信息（info），发送方通过这些信息确认丢失的报文。</p>
+<p>  参考 <strong>【报文重传】</strong> 篇章理解该选项。</p>
+<h4 id="时间戳相关">时间戳相关</h4>
+<p><code>kind=8, length=10, info占用8个Byte</code><br>
+  这个是时间戳选项，计算RTT时间，主要服务于流控。</p>
+<h2 id="协议特性">协议特性</h2>
+<p>  传输层协议有两个，TCP和UDP，我们都知道UDP是数据报协议，用于广播/多播场景， 而TCP协议是<code>面向连接</code>、<code>字节流</code>、<code>可靠传输</code>的传输层协议，同时，每每提到TCP协议，都会提及<code>用塞控制</code>，对于这些关键特性后面会有单独的章节进行介绍：</p>
+<ul>
+<li><strong>面向连接</strong>： 每一次的通讯都需要建立<code>一对一</code>的连接，然后才能进行数据传输，数据传输完成后结束连接。</li>
+<li><strong>字节流</strong>：  在发送端，应用层通过N次写操作，将数据放到TCP发送缓存区后，TCP模块会将发送缓存区中的数据封装成M个TCP报文发送出去，但是这个N和M没有联系，再说接收端接收到数据后，TCP模块会按照报文的序号将数据依次放入TCP的接收缓存区中，并通知应用程序读取数据，应用程序是一次性读取完成还是分为K次读取，完全是应用程序的设计需求，和N、M没有关系。也就是说，发送端写的次数和接收端读取的次数没有瓜葛，可以理解为TCP协议在传输数据时是没有边界的，这就是“字节流”的概念。</li>
+<li><strong>可靠传输</strong>： 为了保证可靠性，TCP做了3件事，采用<code>发送应答机制</code>、<code>报文重传</code>、<code>报文重排</code>。</li>
+<li><strong>用塞控制</strong>： 通过一定的算法设计控制发送报文的速度，以此提高网络带宽利用率，这也是TCP模块的重要职责之一。</li>
+</ul><footer class="article-footer"><a class="section-link" href="/blog/">← 返回全部文章</a></footer></article><aside class="article-toc" data-pagefind-ignore><h2>文章目录</h2><ol><li data-depth="2"><a href="#tcp报文结构">TCP报文结构</a></li><li data-depth="3"><a href="#固定头部">固定头部</a></li><li data-depth="3"><a href="#头部选项">头部选项</a></li><li data-depth="2"><a href="#协议特性">协议特性</a></li></ol></aside></div><script type="module" src="/_astro/_slug_.astro_astro_type_script_index_0_lang.DF_Wvxve.js"></script></main><footer class="site-footer" data-pagefind-ignore><div class="container footer-inner"><span>© 2026 阿左 · 记录技术，探索未来。</span><div class="footer-links"><a class="social-link" href="https://github.com/zuoco" target="_blank" rel="noreferrer"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-3.9c.04-1-.35-2-1-2.7 3.2-.35 6.6-1.6 6.6-7.1A5.5 5.5 0 0 0 19.1 4.4 5.1 5.1 0 0 0 19 1s-1.2-.4-4 1.5a13.7 13.7 0 0 0-7 0C5.2.6 4 1 4 1a5.1 5.1 0 0 0-.1 3.4 5.5 5.5 0 0 0-1.5 3.9c0 5.5 3.4 6.7 6.6 7.1-.5.5-.8 1.1-1 1.8-.1.7-.1 3.8-.1 4.8M8 19c-3 .9-3-1.7-4.2-2.1"></path></svg>GitHub</a><a class="social-link" href="/rss.xml"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11a9 9 0 0 1 9 9M4 4a16 16 0 0 1 16 16"></path><circle cx="5" cy="19" r="1" fill="currentColor"></circle></svg>RSS</a><span>做一个更好的工程师</span></div></div></footer></body></html>

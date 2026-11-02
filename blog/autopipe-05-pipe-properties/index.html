@@ -1,0 +1,200 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width"><meta name="generator" content="Astro v7.3.3"><meta name="description" content="按数据职责整理 Pipe Properties 字段，分析尺寸规格、材料牌号、保温外护、介质和规范参数的来源，以及属性与几何、工况的边界。"><meta name="theme-color" content="#fbfdff"><link rel="icon" type="image/png" href="/favicon.png"><link rel="canonical" href="https://zuoco.github.io/blog/autopipe-05-pipe-properties/"><link rel="alternate" type="application/rss+xml" title="阿左 RSS" href="/rss.xml"><meta property="og:type" content="article"><meta property="og:title" content="AutoPIPE（05）— 管线属性：规格、材料与附属层 · 阿左"><meta property="og:description" content="按数据职责整理 Pipe Properties 字段，分析尺寸规格、材料牌号、保温外护、介质和规范参数的来源，以及属性与几何、工况的边界。"><meta property="og:url" content="https://zuoco.github.io/blog/autopipe-05-pipe-properties/"><meta property="og:image" content="https://zuoco.github.io/images/hero-mountains-v3.png"><meta name="twitter:card" content="summary_large_image"><title>AutoPIPE（05）— 管线属性：规格、材料与附属层 · 阿左</title><script>
+      (() => {
+        const saved = localStorage.getItem('theme');
+        const theme = saved === 'dark' || saved === 'light' ? saved : (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.dataset.theme = theme;
+      })();
+    </script><script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"AutoPIPE（05）— 管线属性：规格、材料与附属层","description":"按数据职责整理 Pipe Properties 字段，分析尺寸规格、材料牌号、保温外护、介质和规范参数的来源，以及属性与几何、工况的边界。","datePublished":"2026-11-01T00:00:00.000Z","dateModified":"2026-11-01T00:00:00.000Z","inLanguage":"zh-CN","url":"https://zuoco.github.io/blog/autopipe-05-pipe-properties/"}</script><link rel="stylesheet" href="/_astro/BaseLayout.Dj3uPNNS.css"></head><body><header class="site-header" data-pagefind-ignore><div class="container header-inner"><a class="brand" href="/" aria-label="阿左首页">阿左</a><nav class="site-nav" id="site-nav" aria-label="主导航"><a class="nav-link" href="/">首页</a><a class="nav-link" href="/blog/" aria-current="page">博客</a><a class="nav-link" href="/projects/">项目</a><a class="nav-link" href="/topics/">专题</a><a class="nav-link" href="/about/">关于</a></nav><div class="header-actions"><a class="icon-button" href="/search/" aria-label="搜索"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.2-3.2"></path></svg></a><button class="icon-button" id="theme-toggle" type="button" aria-label="切换深色模式"><span class="theme-icon-moon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A8.3 8.3 0 1 1 11.2 3 6.5 6.5 0 0 0 21 12.8Z"></path></svg></span><span class="theme-icon-sun" hidden><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.66 6.34l1.41-1.41"></path></svg></span></button><button class="icon-button menu-button" id="menu-toggle" type="button" aria-label="打开导航" aria-controls="site-nav" aria-expanded="false"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"></path></svg></button></div></div></header><script type="module">var e=document.querySelector(`#menu-toggle`),t=document.querySelector(`#site-nav`);e?.addEventListener(`click`,()=>{let n=t?.dataset.open!==`true`;t&&(t.dataset.open=String(n)),e.setAttribute(`aria-expanded`,String(n))});var n=document.querySelector(`#theme-toggle`),r=()=>{let e=document.documentElement.dataset.theme===`dark`;document.querySelector(`.theme-icon-moon`)?.toggleAttribute(`hidden`,e),document.querySelector(`.theme-icon-sun`)?.toggleAttribute(`hidden`,!e),n?.setAttribute(`aria-label`,e?`切换浅色模式`:`切换深色模式`)};r(),n?.addEventListener(`click`,()=>{let e=document.documentElement.dataset.theme===`dark`?`light`:`dark`;document.documentElement.dataset.theme=e,localStorage.setItem(`theme`,e),r()});</script><main class="page-main"><div class="article-shell"><article class="article-content" data-pagefind-body><header class="article-header"><span class="eyebrow">AutoPIPE</span><h1 data-pagefind-meta="title">AutoPIPE（05）— 管线属性：规格、材料与附属层</h1><div class="article-meta"><time datetime="2026-11-01T00:00:00.000Z">2026-11-01</time><span class="tag">AutoPIPE</span><span class="tag">管道属性</span><span class="tag">数据模型</span></div><p class="article-description">按数据职责整理 Pipe Properties 字段，分析尺寸规格、材料牌号、保温外护、介质和规范参数的来源，以及属性与几何、工况的边界。</p></header><p>Pipe Properties 把一根管道计算所需的规格、材料和附属层参数集中在一起。窗口中的字段有不同的数据来源：有些用于查库，有些是查询结果，还有些由用户补充。</p>
+<p><img alt="Pipe Properties：尺寸、附属层、材料与规范参数" loading="lazy" decoding="async" width="816" height="964" src="/_astro/pipe-properties.BpTunfNm_Zje2m8.webp"></p>
+<p>截图中，<code>Pipe Identifier</code> 为 <code>PP_A</code>，公称直径为 <code>20</code>，Schedule 为 <code>STD</code>，材料牌号为 <code>CMN-245</code>。公称尺寸只是规格索引，实际截面计算还要使用查出的外径和壁厚。</p>
+<h2 id="标识与尺寸规格">标识与尺寸规格</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>字段</th><th>含义</th></tr></thead><tbody><tr><td>Pipe Identifier</td><td>这组管道属性的标识</td></tr><tr><td>Tag No.</td><td>工程位号</td></tr><tr><td>Line Class</td><td>管道等级标识</td></tr><tr><td>Nominal Diameter</td><td>公称直径，用于选择规格</td></tr><tr><td>Schedule</td><td>壁厚等级，用于选择规格</td></tr><tr><td>Actual O.D.</td><td>实际外径</td></tr><tr><td>Wall thickness</td><td>壁厚</td></tr><tr><td>Corrosion Allow</td><td>腐蚀裕量</td></tr><tr><td>Fab. thickness</td><td>制造壁厚公差相关输入</td></tr></tbody></table>
+<p>选择公称直径和 Schedule 后，软件可以从 Component 库取得外径与壁厚。腐蚀裕量和制造公差在相关计算中修正可用厚度；它们的输入单位、定义和应用方式要结合当前规范确认。</p>
+<p>研发时需要区分三个值：规格查询键、查库得到的名义数据，以及规范计算使用的有效参数。例如，不能把扣除腐蚀裕量后的厚度直接覆盖原始规格壁厚，否则后续更换规范或重新编辑时会丢失来源。</p>
+<h2 id="保温外护内衬与介质">保温、外护、内衬与介质</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>类别</th><th>窗口字段</th><th>数据用途</th></tr></thead><tbody><tr><td>保温层</td><td>Insul thickness / material / density</td><td>记录保温厚度、材料及密度</td></tr><tr><td>外护层</td><td>Clad thickness / material / density</td><td>记录外护厚度、材料及密度</td></tr><tr><td>内衬</td><td>Lining thickness / density</td><td>记录内衬厚度与密度</td></tr><tr><td>管内介质</td><td>Specific gravity of contents</td><td>记录介质比重</td></tr></tbody></table>
+<p>这些数据参与相关重量和截面尺寸计算。例如，保温层增加单位长度重量，在海洋环境中，外部尺寸还可能用于相关环境载荷计算，具体取值由相应功能设置决定。</p>
+<p><code>Specific gravity</code> 是比重，为无量纲量，应与以 <code>kg/m³</code> 表示的密度分开记录。界面上相邻的数值框，也可能具有完全不同的量纲。</p>
+<h2 id="材料牌号与材料性能">材料牌号与材料性能</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>类别</th><th>窗口字段</th><th>含义</th></tr></thead><tbody><tr><td>材料选择</td><td>Pipe Material</td><td>具体材料牌号，如 <code>CMN-245</code></td></tr><tr><td>材料类别</td><td>Composition</td><td>牌号关联的类别，如 <code>CS</code></td></tr><tr><td>弹性参数</td><td>Long / Hoop / Shear modulus</td><td>纵向、环向和剪切模量</td></tr><tr><td>物性</td><td>Density / Poisson’s ratio</td><td>密度、泊松比</td></tr><tr><td>强度</td><td>Minimum yield / Minimum tensile</td><td>最小屈服强度、最小抗拉强度</td></tr></tbody></table>
+<p>牌号和类别对应上一篇的 <code>SPEC → MATL</code> 关系。对于当前文件中的 <code>CMN-245</code>，<code>SPEC</code> 提供 <code>245 MPa</code> 的屈服强度基值和 <code>415 MPa</code> 的抗拉强度基值，<code>CS</code> 提供密度、泊松比及温度曲线。</p>
+<p>窗口中的数值按当前单位配置显示。截图没有给每个字段单独标注单位，阅读模量或密度数值时，应先确认单位设置。Bentley 的界面说明指出，当前字段的单位显示在主窗口右下角；不能把源库中的 GPa 数值与窗口数值直接比较。</p>
+<p>温压工况窗口还会按运行温度取得 Hot modulus 和强度降额。因此，管线属性中的材料基值、材料曲线和每组工况采用的温度相关值，需要在数据模型中保留各自含义。</p>
+<h2 id="制造焊接和疲劳参数">制造、焊接和疲劳参数</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>字段</th><th>含义</th></tr></thead><tbody><tr><td>Long weld fac ZL</td><td>纵向焊缝相关系数</td></tr><tr><td>Circ weld fac ZC</td><td>环向焊缝相关系数</td></tr><tr><td>Fab. factor</td><td>制造系数</td></tr><tr><td>Ovality Oo</td><td>初始椭圆度</td></tr><tr><td>Fatigue Curve</td><td>疲劳曲线</td></tr><tr><td>Environmental Factor</td><td>环境修正系数</td></tr></tbody></table>
+<p>这些字段的可用性及解释与规范有关。实现属性面板时，不能仅凭字段名称就把它们作为对所有规范通用的一套参数。</p>
+<p><code>Suppress low temp warnings</code> 则是提示控制选项，用于抑制低温警告。它的语义应与材料性能数值分开，勾选该项并不等于修改了材料的低温性能。</p>
+<h2 id="属性几何和工况分别组织">属性、几何和工况分别组织</h2>
+<p>这张窗口没有定义管段长度、走向，也没有列出每组温压数据。可以据此划分三类职责：</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>数据</th><th>负责的内容</th></tr></thead><tbody><tr><td>几何与连接</td><td>管道在哪里、走向如何、连接到哪里</td></tr><tr><td>管线属性</td><td>使用什么尺寸、材料和附属层</td></tr><tr><td>工况数据</td><td>某个状态下，各位置的温度、压力及相关参数</td></tr></tbody></table>
+<p>后面的数据结构方案会让组件通过 <code>PipePropertyId</code> 引用管道属性，再单独组织端口、连接和载荷。这样，同一规格可以在多段几何中使用；一段几何也可以关联多组工况数据。这里是面向研发的设计划分，不据此断定 AutoPIPE 内部采用相同的对象结构。</p>
+<h2 id="参考资料">参考资料</h2>
+<ul>
+<li><a href="https://bentleysystems.service-now.com/community?id=kb_article&#x26;sysparm_article=KB0116332">Bentley：界面单位与 Pipe Identifier，KB0116332</a></li>
+</ul>
+<hr>
+<p><a href="/blog/autopipe-04-material-library/">上一篇：材料库</a> · <a href="/topics/bentley-autopipe/">系列目录</a> · <a href="/blog/autopipe-06-operating-cases/">下一篇：温压工况</a></p><footer class="article-footer"><a class="section-link" href="/blog/">← 返回全部文章</a></footer></article><aside class="article-toc" data-pagefind-ignore><h2>文章目录</h2><ol><li data-depth="2"><a href="#标识与尺寸规格">标识与尺寸规格</a></li><li data-depth="2"><a href="#保温外护内衬与介质">保温、外护、内衬与介质</a></li><li data-depth="2"><a href="#材料牌号与材料性能">材料牌号与材料性能</a></li><li data-depth="2"><a href="#制造焊接和疲劳参数">制造、焊接和疲劳参数</a></li><li data-depth="2"><a href="#属性几何和工况分别组织">属性、几何和工况分别组织</a></li><li data-depth="2"><a href="#参考资料">参考资料</a></li></ol></aside></div><script type="module" src="/_astro/_slug_.astro_astro_type_script_index_0_lang.DF_Wvxve.js"></script></main><footer class="site-footer" data-pagefind-ignore><div class="container footer-inner"><span>© 2026 阿左 · 记录技术，探索未来。</span><div class="footer-links"><a class="social-link" href="https://github.com/zuoco" target="_blank" rel="noreferrer"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-3.9c.04-1-.35-2-1-2.7 3.2-.35 6.6-1.6 6.6-7.1A5.5 5.5 0 0 0 19.1 4.4 5.1 5.1 0 0 0 19 1s-1.2-.4-4 1.5a13.7 13.7 0 0 0-7 0C5.2.6 4 1 4 1a5.1 5.1 0 0 0-.1 3.4 5.5 5.5 0 0 0-1.5 3.9c0 5.5 3.4 6.7 6.6 7.1-.5.5-.8 1.1-1 1.8-.1.7-.1 3.8-.1 4.8M8 19c-3 .9-3-1.7-4.2-2.1"></path></svg>GitHub</a><a class="social-link" href="/rss.xml"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11a9 9 0 0 1 9 9M4 4a16 16 0 0 1 16 16"></path><circle cx="5" cy="19" r="1" fill="currentColor"></circle></svg>RSS</a><span>做一个更好的工程师</span></div></div></footer></body></html>

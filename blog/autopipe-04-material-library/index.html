@@ -1,0 +1,104 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width"><meta name="generator" content="Astro v7.3.3"><meta name="description" content="以 DNVM2021.src 为例，分析 UNITS、MATL、SPEC 的组织方式，以及材料类别、具体牌号、温度曲线与强度降额之间的引用关系。"><meta name="theme-color" content="#fbfdff"><link rel="icon" type="image/png" href="/favicon.png"><link rel="canonical" href="https://zuoco.github.io/blog/autopipe-04-material-library/"><link rel="alternate" type="application/rss+xml" title="阿左 RSS" href="/rss.xml"><meta property="og:type" content="article"><meta property="og:title" content="AutoPIPE（04）— 材料库：DNVM2021 文件结构 · 阿左"><meta property="og:description" content="以 DNVM2021.src 为例，分析 UNITS、MATL、SPEC 的组织方式，以及材料类别、具体牌号、温度曲线与强度降额之间的引用关系。"><meta property="og:url" content="https://zuoco.github.io/blog/autopipe-04-material-library/"><meta property="og:image" content="https://zuoco.github.io/images/hero-mountains-v3.png"><meta name="twitter:card" content="summary_large_image"><title>AutoPIPE（04）— 材料库：DNVM2021 文件结构 · 阿左</title><script>
+      (() => {
+        const saved = localStorage.getItem('theme');
+        const theme = saved === 'dark' || saved === 'light' ? saved : (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.dataset.theme = theme;
+      })();
+    </script><script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"AutoPIPE（04）— 材料库：DNVM2021 文件结构","description":"以 DNVM2021.src 为例，分析 UNITS、MATL、SPEC 的组织方式，以及材料类别、具体牌号、温度曲线与强度降额之间的引用关系。","datePublished":"2026-11-01T00:00:00.000Z","dateModified":"2026-11-01T00:00:00.000Z","inLanguage":"zh-CN","url":"https://zuoco.github.io/blog/autopipe-04-material-library/"}</script><link rel="stylesheet" href="/_astro/BaseLayout.Dj3uPNNS.css"></head><body><header class="site-header" data-pagefind-ignore><div class="container header-inner"><a class="brand" href="/" aria-label="阿左首页">阿左</a><nav class="site-nav" id="site-nav" aria-label="主导航"><a class="nav-link" href="/">首页</a><a class="nav-link" href="/blog/" aria-current="page">博客</a><a class="nav-link" href="/projects/">项目</a><a class="nav-link" href="/topics/">专题</a><a class="nav-link" href="/about/">关于</a></nav><div class="header-actions"><a class="icon-button" href="/search/" aria-label="搜索"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.2-3.2"></path></svg></a><button class="icon-button" id="theme-toggle" type="button" aria-label="切换深色模式"><span class="theme-icon-moon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A8.3 8.3 0 1 1 11.2 3 6.5 6.5 0 0 0 21 12.8Z"></path></svg></span><span class="theme-icon-sun" hidden><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.66 6.34l1.41-1.41"></path></svg></span></button><button class="icon-button menu-button" id="menu-toggle" type="button" aria-label="打开导航" aria-controls="site-nav" aria-expanded="false"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"></path></svg></button></div></div></header><script type="module">var e=document.querySelector(`#menu-toggle`),t=document.querySelector(`#site-nav`);e?.addEventListener(`click`,()=>{let n=t?.dataset.open!==`true`;t&&(t.dataset.open=String(n)),e.setAttribute(`aria-expanded`,String(n))});var n=document.querySelector(`#theme-toggle`),r=()=>{let e=document.documentElement.dataset.theme===`dark`;document.querySelector(`.theme-icon-moon`)?.toggleAttribute(`hidden`,e),document.querySelector(`.theme-icon-sun`)?.toggleAttribute(`hidden`,!e),n?.setAttribute(`aria-label`,e?`切换浅色模式`:`切换深色模式`)};r(),n?.addEventListener(`click`,()=>{let e=document.documentElement.dataset.theme===`dark`?`light`:`dark`;document.documentElement.dataset.theme=e,localStorage.setItem(`theme`,e),r()});</script><main class="page-main"><div class="article-shell"><article class="article-content" data-pagefind-body><header class="article-header"><span class="eyebrow">AutoPIPE</span><h1 data-pagefind-meta="title">AutoPIPE（04）— 材料库：DNVM2021 文件结构</h1><div class="article-meta"><time datetime="2026-11-01T00:00:00.000Z">2026-11-01</time><span class="tag">AutoPIPE</span><span class="tag">材料库</span><span class="tag">文件格式</span></div><p class="article-description">以 DNVM2021.src 为例，分析 UNITS、MATL、SPEC 的组织方式，以及材料类别、具体牌号、温度曲线与强度降额之间的引用关系。</p></header><p>Material 选择的是一套材料库。具体管段采用哪种材料，还要在 Pipe Properties 中选择牌号。同一个模型可以从所选库中使用不同材料。</p>
+<p><img alt="Material 下拉列表中的 DNVM2021 材料库" loading="lazy" decoding="async" width="781" height="292" src="/_astro/material-libraries.CIvsyUs6_zEhic.webp"></p>
+<p>这篇分析笔记中保存的 <code>DNVM2021.src</code>。该文件共 1102 行，分为 <code>UNITS</code>、<code>MATL</code>、<code>SPEC</code> 三个部分。文件开头的 <code>02</code> 对应两张数据表 <code>MATL</code> 和 <code>SPEC</code>，单位定义另列在前面。</p>
+<p><img alt="AutoPIPE 2025 中 DNVM2021.lib 与 Libraries 目录下的源文件" loading="lazy" decoding="async" width="1528" height="284" src="/_astro/material-source.B9rNl6Jd_Z1r9arp.webp"></p>
+<h2 id="units给数值规定单位">UNITS：给数值规定单位</h2>
+<p><code>UNITS</code> 按编号列出单位名称、换算系数和偏移量。后面的字段通过编号引用它，因而同样是数值 <code>360.00</code>，只有结合字段的单位编号才能解释其物理意义。</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>编号</th><th>类别</th><th>该文件采用的单位</th></tr></thead><tbody><tr><td>14</td><td>密度</td><td>kg/m³</td></tr><tr><td>15</td><td>弹性模量</td><td>kN/mm²，即 GPa</td></tr><tr><td>24</td><td>单位长度热伸长量</td><td>mm/m</td></tr><tr><td>25</td><td>温度</td><td>°C</td></tr><tr><td>30</td><td>材料库强度</td><td>MPa</td></tr></tbody></table>
+<p>源文件中的部分定义如下：</p>
+<div class="expressive-code"><link rel="stylesheet" href="/_astro/ec.z7juk.css"><script type="module" src="/_astro/ec.0vx5m.js"></script><figure class="frame"><figcaption class="header"></figcaption><pre data-language="text"><code><div class="ec-line"><div class="code"><span style="--0:#24292e;--1:#e1e4e8">Kg/m3           16.018464       0.0         ; 14. density</span></div></div><div class="ec-line"><div class="code"><span style="--0:#24292e;--1:#e1e4e8">kN/mm2           6.894757       0.0         ; 15. Young's modulus</span></div></div><div class="ec-line"><div class="code"><span style="--0:#24292e;--1:#e1e4e8">mm/m           0.83333333       0.0         ; 24. thermal expansion</span></div></div><div class="ec-line"><div class="code"><span style="--0:#24292e;--1:#e1e4e8">deg C          0.55555556-17.777778         ; 25. temperature</span></div></div><div class="ec-line"><div class="code"><span style="--0:#24292e;--1:#e1e4e8">MPa              6.894757       0.0         ; 30. material library stress</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="Kg/m3           16.018464       0.0         ; 14. densitykN/mm2           6.894757       0.0         ; 15. Young&#x27;s modulusmm/m           0.83333333       0.0         ; 24. thermal expansiondeg C          0.55555556-17.777778         ; 25. temperatureMPa              6.894757       0.0         ; 30. material library stress"><div></div></button></div></figure></div>
+<p>温度行的系数与偏移量紧邻，这是固定列格式的表现。读取这类文本需要按列宽切分，不能依赖空格是否存在。</p>
+<p>这里定义的是库源数据的单位。模型窗口采用什么单位，由输入单位配置决定；报告采用什么单位，由输出配置决定。库中数值经过换算后，界面上的数值外观可能不同。</p>
+<h2 id="matl材料类别的通用物性">MATL：材料类别的通用物性</h2>
+<p>本文件的 <code>MATL</code> 表有三类材料：</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>ID</th><th>类别</th></tr></thead><tbody><tr><td><code>CS</code></td><td>低碳钢</td></tr><tr><td><code>DUPLEX</code></td><td>双相不锈钢</td></tr><tr><td><code>MARTENSITIC</code></td><td>马氏体不锈钢</td></tr></tbody></table>
+<p>每类材料包含密度、泊松比，以及随温度变化的热伸长量和弹性模量。</p>
+<p><code>CS</code> 的密度为 <code>7750 kg/m³</code>，泊松比为 <code>0.3000</code>。其温度曲线的一部分为：</p>
+<div class="expressive-code"><figure class="frame"><figcaption class="header"></figcaption><pre data-language="text"><code><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#24292e;--1:#e1e4e8"> </span></span><span style="--0:#24292e;--1:#e1e4e8">CS</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#24292e;--1:#e1e4e8"> </span></span><span style="--0:#24292e;--1:#e1e4e8">Low carbon steel    12 50  3  1 7750.   0.3000</span></div></div><div class="ec-line"><div class="code"><span style="--0:#24292e;--1:#e1e4e8">*MECH</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#24292e;--1:#e1e4e8">     </span></span><span style="--0:#24292e;--1:#e1e4e8">-20.0   -0.4570    205.51</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#24292e;--1:#e1e4e8">       </span></span><span style="--0:#24292e;--1:#e1e4e8">0.0   -0.2285    204.49</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#24292e;--1:#e1e4e8">      </span></span><span style="--0:#24292e;--1:#e1e4e8">20.0    0.0000    203.45</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#24292e;--1:#e1e4e8">      </span></span><span style="--0:#24292e;--1:#e1e4e8">40.0    0.2667    202.14</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#24292e;--1:#e1e4e8">      </span></span><span style="--0:#24292e;--1:#e1e4e8">60.0    0.5200    200.79</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#24292e;--1:#e1e4e8">      </span></span><span style="--0:#24292e;--1:#e1e4e8">80.0    0.7600    199.43</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code=" CS Low carbon steel    12 50  3  1 7750.   0.3000*MECH     -20.0   -0.4570    205.51       0.0   -0.2285    204.49      20.0    0.0000    203.45      40.0    0.2667    202.14      60.0    0.5200    200.79      80.0    0.7600    199.43"><div></div></button></div></figure></div>
+<p>三列依次是温度、单位长度热伸长量、弹性模量。例如，80°C 对应 <code>0.7600 mm/m</code> 和 <code>199.43 GPa</code>。</p>
+<p>热伸长量列的单位是 <code>mm/m</code>，不能把它直接作为单位为 <code>1/°C</code> 的热膨胀系数。计算从参考温度到运行温度的热变形时，要使用两个温度对应的伸长量之差。</p>
+<p>文件中还保留了曲线记录的存储空间和补零行。分析表内容时，应同时阅读记录格式和有效数据数量，不能把每一行零值都当作一个真实温度点。</p>
+<h2 id="spec牌号基准强度与温度降额">SPEC：牌号、基准强度与温度降额</h2>
+<p>本文件的 <code>SPEC</code> 表有 21 个牌号，包含 <code>CMN-245</code> 至 <code>CMN-555</code> 中的一组牌号、若干 <code>API5L-X…</code> 牌号，以及 <code>22CR</code>、<code>25CR</code> 等。</p>
+<p>牌号记录引用一个 <code>MATL</code> 类别，同时保存自己的屈服强度、抗拉强度和温度降额。例如：</p>
+<div class="expressive-code"><figure class="frame"><figcaption class="header"></figcaption><pre data-language="text"><code><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#24292e;--1:#e1e4e8"> </span></span><span style="--0:#24292e;--1:#e1e4e8">CMN-360</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#24292e;--1:#e1e4e8"> </span></span><span style="--0:#24292e;--1:#e1e4e8">CS            Carbon steel          06  26   3   0  360.00  460.00</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code=" CMN-360 CS            Carbon steel          06  26   3   0  360.00  460.00"><div></div></button></div></figure></div>
+<p><code>CMN-360</code> 引用 <code>CS</code>。因此，它使用 <code>CS</code> 的通用物性，自己的屈服强度、抗拉强度基值则分别为 <code>360 MPa</code>、<code>460 MPa</code>。</p>
+<p>对应记录后面的部分降额数据是：</p>
+<div class="expressive-code"><figure class="frame"><figcaption class="header"></figcaption><pre data-language="text"><code><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#24292e;--1:#e1e4e8">    </span></span><span style="--0:#24292e;--1:#e1e4e8">0.  000.0  000.0</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#24292e;--1:#e1e4e8">   </span></span><span style="--0:#24292e;--1:#e1e4e8">20.  000.0  000.0</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#24292e;--1:#e1e4e8">   </span></span><span style="--0:#24292e;--1:#e1e4e8">50.  000.0  000.0</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#24292e;--1:#e1e4e8">  </span></span><span style="--0:#24292e;--1:#e1e4e8">100.  030.0  030.0</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#24292e;--1:#e1e4e8">  </span></span><span style="--0:#24292e;--1:#e1e4e8">150.  050.0  050.0</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#24292e;--1:#e1e4e8">  </span></span><span style="--0:#24292e;--1:#e1e4e8">200.  070.0  070.0</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="    0.  000.0  000.0   20.  000.0  000.0   50.  000.0  000.0  100.  030.0  030.0  150.  050.0  050.0  200.  070.0  070.0"><div></div></button></div></figure></div>
+<p>三列依次为温度、Fy 降额和 Fu 降额。100°C 行中的两个 <code>30.0</code> 表示强度降低量，单位为 MPa。它们与牌号记录中的 <code>Yield</code>、<code>Tensile</code> 基值是不同字段；不能把界面上的 <code>fy derating</code> 直接解释成当前温度下的屈服强度。</p>
+<p>这些数据如何进入具体承载能力公式，还取决于所选规范中的材料强度定义、系数和适用条件。</p>
+<h2 id="材料类别与牌号为什么分开">材料类别与牌号为什么分开</h2>
+<p>沿着本例可以得到如下引用关系：</p>
+<div class="expressive-code"><figure class="frame"><figcaption class="header"></figcaption><pre data-language="text"><code><div class="ec-line"><div class="code"><span style="--0:#24292e;--1:#e1e4e8">管道属性选择 CMN-360</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#24292e;--1:#e1e4e8">    </span></span><span style="--0:#24292e;--1:#e1e4e8">├─ SPEC：Yield、Tensile、Fy/Fu 温度降额</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#24292e;--1:#e1e4e8">    </span></span><span style="--0:#24292e;--1:#e1e4e8">└─ 引用 CS</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#24292e;--1:#e1e4e8">         </span></span><span style="--0:#24292e;--1:#e1e4e8">└─ MATL：密度、泊松比、热伸长量、弹性模量</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="管道属性选择 CMN-360    ├─ SPEC：Yield、Tensile、Fy/Fu 温度降额    └─ 引用 CS         └─ MATL：密度、泊松比、热伸长量、弹性模量"><div></div></button></div></figure></div>
+<p>多个碳钢牌号可以共用 <code>CS</code> 的物性曲线，同时保留各自的强度。数据读取时，需要先找到牌号，再沿引用找到材料类别；遇到曲线数据，还需要结合运行温度和参考温度取得相应值。</p>
+<p>这种结构也让“材料库”“材料牌号”“材料类别”成为三个不同层级。模型中保存哪个层级的引用，会直接影响属性编辑、换材和数据追溯的实现方式。</p>
+<h2 id="参考资料">参考资料</h2>
+<ul>
+<li>本组笔记中的 <code>DNVM2021.src</code>，以上计数、字段和数值均以该文件为准。</li>
+<li><a href="https://bentleysystems.service-now.com/community?id=kb_article&#x26;sysparm_article=KB0024785">Bentley：查看材料库及 MATL / SPEC 关联，KB0024785</a></li>
+<li><a href="https://bentleysystems.service-now.com/community?id=kb_article_view&#x26;sysparm_article=KB0116695">Bentley：材料数据说明，KB0116695</a></li>
+</ul>
+<hr>
+<p><a href="/blog/autopipe-03-component-library/">上一篇：组件库</a> · <a href="/topics/bentley-autopipe/">系列目录</a> · <a href="/blog/autopipe-05-pipe-properties/">下一篇：管线属性</a></p><footer class="article-footer"><a class="section-link" href="/blog/">← 返回全部文章</a></footer></article><aside class="article-toc" data-pagefind-ignore><h2>文章目录</h2><ol><li data-depth="2"><a href="#units给数值规定单位">UNITS：给数值规定单位</a></li><li data-depth="2"><a href="#matl材料类别的通用物性">MATL：材料类别的通用物性</a></li><li data-depth="2"><a href="#spec牌号基准强度与温度降额">SPEC：牌号、基准强度与温度降额</a></li><li data-depth="2"><a href="#材料类别与牌号为什么分开">材料类别与牌号为什么分开</a></li><li data-depth="2"><a href="#参考资料">参考资料</a></li></ol></aside></div><script type="module" src="/_astro/_slug_.astro_astro_type_script_index_0_lang.DF_Wvxve.js"></script></main><footer class="site-footer" data-pagefind-ignore><div class="container footer-inner"><span>© 2026 阿左 · 记录技术，探索未来。</span><div class="footer-links"><a class="social-link" href="https://github.com/zuoco" target="_blank" rel="noreferrer"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-3.9c.04-1-.35-2-1-2.7 3.2-.35 6.6-1.6 6.6-7.1A5.5 5.5 0 0 0 19.1 4.4 5.1 5.1 0 0 0 19 1s-1.2-.4-4 1.5a13.7 13.7 0 0 0-7 0C5.2.6 4 1 4 1a5.1 5.1 0 0 0-.1 3.4 5.5 5.5 0 0 0-1.5 3.9c0 5.5 3.4 6.7 6.6 7.1-.5.5-.8 1.1-1 1.8-.1.7-.1 3.8-.1 4.8M8 19c-3 .9-3-1.7-4.2-2.1"></path></svg>GitHub</a><a class="social-link" href="/rss.xml"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11a9 9 0 0 1 9 9M4 4a16 16 0 0 1 16 16"></path><circle cx="5" cy="19" r="1" fill="currentColor"></circle></svg>RSS</a><span>做一个更好的工程师</span></div></div></footer></body></html>

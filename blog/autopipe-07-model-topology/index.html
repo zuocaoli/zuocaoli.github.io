@@ -1,0 +1,145 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width"><meta name="generator" content="Astro v7.3.3"><meta name="description" content="从管道、吊架和梁的联合模型出发，区分工程对象、分析节点和显示几何，梳理支撑连接、自由度关系及弯头控制点的用途。"><meta name="theme-color" content="#fbfdff"><link rel="icon" type="image/png" href="/favicon.png"><link rel="canonical" href="https://zuoco.github.io/blog/autopipe-07-model-topology/"><link rel="alternate" type="application/rss+xml" title="阿左 RSS" href="/rss.xml"><meta property="og:type" content="article"><meta property="og:title" content="AutoPIPE（07）— 模型分层与管道支撑拓扑 · 阿左"><meta property="og:description" content="从管道、吊架和梁的联合模型出发，区分工程对象、分析节点和显示几何，梳理支撑连接、自由度关系及弯头控制点的用途。"><meta property="og:url" content="https://zuoco.github.io/blog/autopipe-07-model-topology/"><meta property="og:image" content="https://zuoco.github.io/images/hero-mountains-v3.png"><meta name="twitter:card" content="summary_large_image"><title>AutoPIPE（07）— 模型分层与管道支撑拓扑 · 阿左</title><script>
+      (() => {
+        const saved = localStorage.getItem('theme');
+        const theme = saved === 'dark' || saved === 'light' ? saved : (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.dataset.theme = theme;
+      })();
+    </script><script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"AutoPIPE（07）— 模型分层与管道支撑拓扑","description":"从管道、吊架和梁的联合模型出发，区分工程对象、分析节点和显示几何，梳理支撑连接、自由度关系及弯头控制点的用途。","datePublished":"2026-11-01T00:00:00.000Z","dateModified":"2026-11-01T00:00:00.000Z","inLanguage":"zh-CN","url":"https://zuoco.github.io/blog/autopipe-07-model-topology/"}</script><link rel="stylesheet" href="/_astro/BaseLayout.Dj3uPNNS.css"></head><body><header class="site-header" data-pagefind-ignore><div class="container header-inner"><a class="brand" href="/" aria-label="阿左首页">阿左</a><nav class="site-nav" id="site-nav" aria-label="主导航"><a class="nav-link" href="/">首页</a><a class="nav-link" href="/blog/" aria-current="page">博客</a><a class="nav-link" href="/projects/">项目</a><a class="nav-link" href="/topics/">专题</a><a class="nav-link" href="/about/">关于</a></nav><div class="header-actions"><a class="icon-button" href="/search/" aria-label="搜索"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.2-3.2"></path></svg></a><button class="icon-button" id="theme-toggle" type="button" aria-label="切换深色模式"><span class="theme-icon-moon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A8.3 8.3 0 1 1 11.2 3 6.5 6.5 0 0 0 21 12.8Z"></path></svg></span><span class="theme-icon-sun" hidden><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.66 6.34l1.41-1.41"></path></svg></span></button><button class="icon-button menu-button" id="menu-toggle" type="button" aria-label="打开导航" aria-controls="site-nav" aria-expanded="false"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"></path></svg></button></div></div></header><script type="module">var e=document.querySelector(`#menu-toggle`),t=document.querySelector(`#site-nav`);e?.addEventListener(`click`,()=>{let n=t?.dataset.open!==`true`;t&&(t.dataset.open=String(n)),e.setAttribute(`aria-expanded`,String(n))});var n=document.querySelector(`#theme-toggle`),r=()=>{let e=document.documentElement.dataset.theme===`dark`;document.querySelector(`.theme-icon-moon`)?.toggleAttribute(`hidden`,e),document.querySelector(`.theme-icon-sun`)?.toggleAttribute(`hidden`,!e),n?.setAttribute(`aria-label`,e?`切换浅色模式`:`切换深色模式`)};r(),n?.addEventListener(`click`,()=>{let e=document.documentElement.dataset.theme===`dark`?`light`:`dark`;document.documentElement.dataset.theme=e,localStorage.setItem(`theme`,e),r()});</script><main class="page-main"><div class="article-shell"><article class="article-content" data-pagefind-body><header class="article-header"><span class="eyebrow">AutoPIPE</span><h1 data-pagefind-meta="title">AutoPIPE（07）— 模型分层与管道支撑拓扑</h1><div class="article-meta"><time datetime="2026-11-01T00:00:00.000Z">2026-11-01</time><span class="tag">AutoPIPE</span><span class="tag">模型拓扑</span><span class="tag">有限元</span></div><p class="article-description">从管道、吊架和梁的联合模型出发，区分工程对象、分析节点和显示几何，梳理支撑连接、自由度关系及弯头控制点的用途。</p></header><p>AutoPIPE 面向管系的简化力学模型，使用中心线、截面属性、连接关系和约束描述管道系统，以一维管／梁单元在三维空间中分析响应。界面能够把管道显示为实体外形，但显示表面与应力分析所用的单元承担不同职责。</p>
+<h2 id="从工具组看工程对象">从工具组看工程对象</h2>
+<p><img alt="Piping Components 和 Supports 工具组" loading="lazy" decoding="async" width="1120" height="158" src="/_astro/piping-support-tools.BagzgRlY_22EI9H.webp"></p>
+<p><img alt="Structure 工具组中的梁截面与梁" loading="lazy" decoding="async" width="207" height="158" src="/_astro/structure-tools.CYo6j6ig_1iU9gP.webp"></p>
+<p>这几组工具对应三类工程数据：</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>工具组</th><th>对象</th><th>主要关系</th></tr></thead><tbody><tr><td>Piping Components</td><td>直管、弯头、三通、法兰、阀门、柔性接头、异径管、设备接管等</td><td>形成管路及其连接</td></tr><tr><td>Supports</td><td>锚固、节点连接、支吊架等</td><td>限制运动或在对象之间传力</td></tr><tr><td>Structure</td><td>梁截面属性、梁构件</td><td>描述承载结构及其刚度</td></tr></tbody></table>
+<p>工具栏中的 Segment、Ring 用于组织或生成管道，不能只按按钮位置就把它们视为与阀门、法兰相同的实体零件。建模命令、属性定义和模型对象需要分别识别。</p>
+<h2 id="工程模型分析模型与显示几何">工程模型、分析模型与显示几何</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>层次</th><th>数据</th><th>用途</th></tr></thead><tbody><tr><td>工程模型</td><td>管件、支撑、梁、规格、材料和工况</td><td>支持创建、编辑与工程语义</td></tr><tr><td>分析模型</td><td>计算节点、单元、自由度、约束和载荷</td><td>组装及求解力学方程</td></tr><tr><td>显示几何</td><td>中心线、符号、管道表面和阀门外形</td><td>显示、拾取与检查</td></tr></tbody></table>
+<p>这是为了分析数据职责而作的概念分层，不代表 AutoPIPE 源码采用同名模块或类。</p>
+<p>从工程对象生成分析模型时，一个管件可能转换成多个计算单元；生成显示几何时，同一个管件又可能产生大量三角面。中心线或符号显示也不能直接等同于实际有限元网格。</p>
+<p>因此，研发中需要能够从显示对象找到工程对象，再从工程对象追溯它生成的分析节点与单元。仅用一个“几何 ID”贯穿所有用途，很难表达这些数量关系。</p>
+<h2 id="管道通过支撑与结构发生联系">管道通过支撑与结构发生联系</h2>
+<p><img alt="管道、弹簧吊架和钢梁组成的联合模型" loading="lazy" decoding="async" width="1573" height="1577" src="/_astro/pipe-support-frame.Dvi9tWUg_Z26Ay7l.webp"></p>
+<p>图中灰色管道通过绿色吊架连接上方工字梁，梁端设有固定约束。局部传力关系为：</p>
+<pre class="mermaid">flowchart TD
+    L["A 管路一侧"] --- J["三通连接处"]
+    R["A 管路另一侧"] --- J
+    J ---|"支管"| P["管道节点 B01"]
+    P -. "弹簧吊架" .- M["梁节点 M1002"]
+    M ---|"梁 M2"| F["梁节点 M1003"]
+    F ---|"锚固约束"| G["地面／基础"]</pre>
+<p>B01 和 M1002 是两个不同节点，通过吊架产生联系；M1002 与 M1003 之间有梁单元；M1003 的锚固提供边界条件。</p>
+<p>节点之间有连接，并不表示所有自由度都相等。以沿全局 Y 方向的线性弹簧为例，按约定的弹簧轴力正向，可以写出：</p>
+<span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>F</mi><mo>=</mo><mi>k</mi><mrow><mo fence="true">(</mo><msub><mi>u</mi><mrow><mrow><mi mathvariant="normal">B</mi><mn>01</mn></mrow><mo separator="true">,</mo><mi>y</mi></mrow></msub><mo>−</mo><msub><mi>u</mi><mrow><mrow><mi mathvariant="normal">M</mi><mn>1002</mn></mrow><mo separator="true">,</mo><mi>y</mi></mrow></msub><mo fence="true">)</mo></mrow></mrow><annotation encoding="application/x-tex">F = k\left(u_{\mathrm{B01},y} - u_{\mathrm{M1002},y}\right)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.1389em;">F</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1.0361em;vertical-align:-0.2861em;"></span><span class="mord mathnormal" style="margin-right:0.0315em;">k</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="minner"><span class="mopen delimcenter" style="top:0em;">(</span><span class="mord"><span class="mord mathnormal">u</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathrm mtight">B01</span></span><span class="mpunct mtight">,</span><span class="mord mathnormal mtight" style="margin-right:0.0359em;">y</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord"><span class="mord mathnormal">u</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathrm mtight">M1002</span></span><span class="mpunct mtight">,</span><span class="mord mathnormal mtight" style="margin-right:0.0359em;">y</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span><span class="mclose delimcenter" style="top:0em;">)</span></span></span></span></span></span>
+<p>其中 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>k</mi></mrow><annotation encoding="application/x-tex">k</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6944em;"></span><span class="mord mathnormal" style="margin-right:0.0315em;">k</span></span></span></span> 为弹簧刚度，括号内为两端的相对竖向位移。梁发生变形时，M1002 随之移动，弹簧力和管道响应也会改变。这个式子只说明线性弹簧的相对位移关系，实际吊架还需按其类型定义刚度、预载或其他特性。</p>
+<h2 id="分析拓扑描述节点与自由度关系">分析拓扑描述节点与自由度关系</h2>
+<p>AutoPIPE 的分析节点通常具有三个位移和三个转角自由度。不同对象在分析拓扑中的作用可归纳为：</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>对象</th><th>分析作用</th></tr></thead><tbody><tr><td>直管、弯管、梁单元</td><td>根据截面和材料定义节点之间的刚度关系</td></tr><tr><td>三通连接</td><td>在主管、支管之间传递位移和内力</td></tr><tr><td>支撑、弹簧、连接件</td><td>约束节点与地面，或两个节点之间的相对运动</td></tr><tr><td>锚固</td><td>对节点施加指定的边界条件</td></tr></tbody></table>
+<p>支撑可能连接地面，也可能连接另一管道节点或梁节点。间隙、摩擦和单向接触等特性还会使关系具有非线性，不能把所有支撑都转换成“合并两个节点”。</p>
+<h2 id="弯头的几何点与分析节点">弯头的几何点与分析节点</h2>
+<p>图中 A01、A04、A06 等标签位于弯头两条切线的交点附近。弯头上需要区分几类点：</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>点</th><th>用途</th></tr></thead><tbody><tr><td>TIP（Tangent Intersection Point）</td><td>两条切线的交点，用于定义弯头几何；不是实际刚度求解节点</td></tr><tr><td>Near / Far</td><td>弯头两端切点，对应分析节点</td></tr><tr><td>Mid</td><td>可选中间点，定义后可增加分析节点并分割弯头单元</td></tr></tbody></table>
+<p>一个可以显示、标注或拾取的点，未必能作为有限元节点，也未必是组件的连接端口。</p>
+<p>后续数据结构设计会让工程对象保存有明确用途的几何点，用端口声明对外连接位置；分析转换阶段再生成计算节点及单元。支撑另行记录作用位置、另一端目标和约束方向。这样才能表达管道、支撑和结构之间不同类型的联系。</p>
+<h2 id="参考资料">参考资料</h2>
+<ul>
+<li><a href="https://bentleysystems.service-now.com/community?id=kb_article_view&#x26;sysparm_article=KB0116268">Bentley：分析模型与自由度，KB0116268</a></li>
+<li><a href="https://bentleysystems.service-now.com/community?id=kb_article_view&#x26;sysparm_article=KB0024993">Bentley：管道与结构联合建模，KB0024993</a></li>
+<li><a href="https://bentleysystems.service-now.com/community?id=kb_article&#x26;sysparm_article=KB0117995">Bentley：弯头节点与 TIP，KB0117995</a></li>
+</ul>
+<hr>
+<p><a href="/blog/autopipe-06-operating-cases/">上一篇：温压工况</a> · <a href="/topics/bentley-autopipe/">系列目录</a> · <a href="/blog/autopipe-08-network-data-model/">下一篇：管道网络数据结构</a></p><footer class="article-footer"><a class="section-link" href="/blog/">← 返回全部文章</a></footer></article><aside class="article-toc" data-pagefind-ignore><h2>文章目录</h2><ol><li data-depth="2"><a href="#从工具组看工程对象">从工具组看工程对象</a></li><li data-depth="2"><a href="#工程模型分析模型与显示几何">工程模型、分析模型与显示几何</a></li><li data-depth="2"><a href="#管道通过支撑与结构发生联系">管道通过支撑与结构发生联系</a></li><li data-depth="2"><a href="#分析拓扑描述节点与自由度关系">分析拓扑描述节点与自由度关系</a></li><li data-depth="2"><a href="#弯头的几何点与分析节点">弯头的几何点与分析节点</a></li><li data-depth="2"><a href="#参考资料">参考资料</a></li></ol></aside></div><script type="module" src="/_astro/_slug_.astro_astro_type_script_index_0_lang.DF_Wvxve.js"></script></main><footer class="site-footer" data-pagefind-ignore><div class="container footer-inner"><span>© 2026 阿左 · 记录技术，探索未来。</span><div class="footer-links"><a class="social-link" href="https://github.com/zuoco" target="_blank" rel="noreferrer"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-3.9c.04-1-.35-2-1-2.7 3.2-.35 6.6-1.6 6.6-7.1A5.5 5.5 0 0 0 19.1 4.4 5.1 5.1 0 0 0 19 1s-1.2-.4-4 1.5a13.7 13.7 0 0 0-7 0C5.2.6 4 1 4 1a5.1 5.1 0 0 0-.1 3.4 5.5 5.5 0 0 0-1.5 3.9c0 5.5 3.4 6.7 6.6 7.1-.5.5-.8 1.1-1 1.8-.1.7-.1 3.8-.1 4.8M8 19c-3 .9-3-1.7-4.2-2.1"></path></svg>GitHub</a><a class="social-link" href="/rss.xml"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11a9 9 0 0 1 9 9M4 4a16 16 0 0 1 16 16"></path><circle cx="5" cy="19" r="1" fill="currentColor"></circle></svg>RSS</a><span>做一个更好的工程师</span></div></div></footer></body></html>
