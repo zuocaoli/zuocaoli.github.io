@@ -1,0 +1,183 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width"><meta name="generator" content="Astro v7.4.12"><meta name="description" content="梳理 ParaView 后处理所需的网格、物理量与时间信息，区分 Point Data、Cell Data 和 Field Data，并介绍常见结果文件格式及悬臂梁分析示例。"><meta name="theme-color" content="#fbfdff"><link rel="icon" type="image/png" href="/favicon.png"><link rel="canonical" href="https://zcli.netlify.app/blog/paraview-01-post-processing/"><link rel="alternate" type="application/rss+xml" title="阿左 RSS" href="/rss.xml"><meta property="og:type" content="article"><meta property="og:title" content="ParaView（01）— 后处理：输入数据、文件格式与数据内容 · 阿左"><meta property="og:description" content="梳理 ParaView 后处理所需的网格、物理量与时间信息，区分 Point Data、Cell Data 和 Field Data，并介绍常见结果文件格式及悬臂梁分析示例。"><meta property="og:url" content="https://zcli.netlify.app/blog/paraview-01-post-processing/"><meta property="og:image" content="https://zcli.netlify.app/images/hero-mountains-v3.png"><meta name="twitter:card" content="summary_large_image"><title>ParaView（01）— 后处理：输入数据、文件格式与数据内容 · 阿左</title><script>
+      (() => {
+        const saved = localStorage.getItem('theme');
+        const theme = saved === 'dark' || saved === 'light' ? saved : (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.dataset.theme = theme;
+      })();
+    </script><script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"ParaView（01）— 后处理：输入数据、文件格式与数据内容","description":"梳理 ParaView 后处理所需的网格、物理量与时间信息，区分 Point Data、Cell Data 和 Field Data，并介绍常见结果文件格式及悬臂梁分析示例。","datePublished":"2026-11-03T00:00:00.000Z","dateModified":"2026-11-03T00:00:00.000Z","inLanguage":"zh-CN","url":"https://zcli.netlify.app/blog/paraview-01-post-processing/"}</script><link rel="stylesheet" href="/_astro/Comments.BZd4ZNvt.css"><link rel="stylesheet" href="/_astro/BaseLayout.5yRULZVq.css"></head><body><header class="site-header" data-pagefind-ignore><div class="container header-inner"><a class="brand" href="/" aria-label="阿左首页">阿左</a><nav class="site-nav" id="site-nav" aria-label="主导航"><a class="nav-link" href="/">首页</a><a class="nav-link" href="/blog/" aria-current="page">博客</a><a class="nav-link" href="/projects/">项目</a><a class="nav-link" href="/topics/">专题</a><a class="nav-link" href="/guestbook/">留言板</a><a class="nav-link" href="/about/">关于</a></nav><div class="header-actions"><a class="icon-button" href="/search/" aria-label="搜索"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.2-3.2"></path></svg></a><button class="icon-button" id="theme-toggle" type="button" aria-label="切换深色模式"><span class="theme-icon-moon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A8.3 8.3 0 1 1 11.2 3 6.5 6.5 0 0 0 21 12.8Z"></path></svg></span><span class="theme-icon-sun" hidden><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.66 6.34l1.41-1.41"></path></svg></span></button><button class="icon-button menu-button" id="menu-toggle" type="button" aria-label="打开导航" aria-controls="site-nav" aria-expanded="false"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"></path></svg></button></div></div></header><script type="module">var e=document.querySelector(`#menu-toggle`),t=document.querySelector(`#site-nav`);e?.addEventListener(`click`,()=>{let n=t?.dataset.open!==`true`;t&&(t.dataset.open=String(n)),e.setAttribute(`aria-expanded`,String(n))});var n=document.querySelector(`#theme-toggle`),r=()=>{let e=document.documentElement.dataset.theme===`dark`;document.querySelector(`.theme-icon-moon`)?.toggleAttribute(`hidden`,e),document.querySelector(`.theme-icon-sun`)?.toggleAttribute(`hidden`,!e),n?.setAttribute(`aria-label`,e?`切换浅色模式`:`切换深色模式`)};r(),n?.addEventListener(`click`,()=>{let e=document.documentElement.dataset.theme===`dark`?`light`:`dark`;document.documentElement.dataset.theme=e,localStorage.setItem(`theme`,e),r()});</script><main class="page-main"><div class="article-shell"><div class="article-main"><article class="article-content" data-pagefind-body><header class="article-header"><span class="eyebrow">ParaView</span><h1 data-pagefind-meta="title">ParaView（01）— 后处理：输入数据、文件格式与数据内容</h1><div class="article-meta"><time datetime="2026-11-03T00:00:00.000Z">2026-11-03</time><span class="tag">ParaView</span><span class="tag">CAE</span><span class="tag">后处理</span><span class="tag">VTK</span><span class="tag">数据格式</span></div><p class="article-description">梳理 ParaView 后处理所需的网格、物理量与时间信息，区分 Point Data、Cell Data 和 Field Data，并介绍常见结果文件格式及悬臂梁分析示例。</p></header><p>CAE 的典型流程是：<strong>前处理（建立计算模型）→ 求解（计算物理响应）→ 后处理（查看、分析计算结果）</strong>。</p>
+<p>ParaView 作为后处理平台，接收的通常是<strong>求解器输出的数值结果数据</strong>。对于常见的有限元、有限体积分析，可以把它理解为：</p>
+<p><strong>计算网格 + 附着在网格上的物理量 + 时间或工况信息。</strong></p>
+<p>例如，结构求解器输出“每个节点移动了多少、每个单元的应力是多少”；流体求解器输出“各处的压力、速度、温度是多少”。ParaView 根据这些数据生成云图、变形图、流线和动画。</p>
+<h2 id="1-数据中包含什么信息">1. 数据中包含什么信息</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>信息</th><th>具体内容</th><th>在后处理中的用途</th></tr></thead><tbody><tr><td>几何位置</td><td>节点的坐标，例如 <code>(x, y, z)</code></td><td>确定模型在空间中的形状和位置</td></tr><tr><td>网格拓扑</td><td>单元类型，以及每个单元连接哪些节点</td><td>构成三角形、四面体、六面体等网格</td></tr><tr><td>物理量</td><td>位移、应力、压力、速度、温度等数值数组</td><td>着色、绘制箭头、计算派生量</td></tr><tr><td>时间／工况</td><td>时间值、载荷步、模态编号等，取决于格式和导出方式</td><td>切换结果、播放动画、分析变化</td></tr><tr><td>分区与集合</td><td>零件、材料区域、边界面、节点集、单元集</td><td>单独显示和分析指定区域</td></tr><tr><td>辅助信息</td><td>原始节点／单元 ID、单位、坐标系说明等，是否包含取决于导出方式</td><td>追踪结果来源和正确解释数值</td></tr></tbody></table>
+<p>其中，<strong>节点坐标和单元连接关系共同定义网格</strong>。例如，一个四面体单元可以由节点 <code>0、1、2、3</code> 组成；只有坐标，没有连接关系，就无法完整表达这个体单元。</p>
+<p>规则网格也可以用原点、间距和尺寸等信息隐式定义，无须逐个记录全部节点坐标。</p>
+<h2 id="2-物理量放在哪里point-data-与-cell-data">2. 物理量放在哪里：Point Data 与 Cell Data</h2>
+<p>这是理解 ParaView 数据最重要的区别。</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>数据位置</th><th>含义</th><th>常见例子</th></tr></thead><tbody><tr><td><strong>Point Data（点数据）</strong></td><td>每个网格点对应一组数值</td><td>有限元节点位移、节点温度</td></tr><tr><td><strong>Cell Data（单元数据）</strong></td><td>每个网格单元对应一组数值</td><td>有限体积单元压力、单元应力结果、材料编号</td></tr><tr><td><strong>Field Data（字段数据）</strong></td><td>不与每个点或单元一一对应的数组</td><td>整体参数、说明信息等</td></tr></tbody></table>
+<p>物理量本身又可以是：</p>
+<ul>
+<li><strong>标量</strong>：温度、压力，每个位置一个数。</li>
+<li><strong>向量</strong>：位移、速度，三维情况下通常有三个分量。</li>
+<li><strong>张量或多个分量数组</strong>：应力、应变；需要明确分量顺序和坐标系。</li>
+</ul>
+<p>例如，一个模型有 10,000 个节点、5,000 个单元，那么：</p>
+<div class="expressive-code"><link rel="stylesheet" href="/_astro/ec.z7juk.css"><script type="module" src="/_astro/ec.0vx5m.js"></script><figure class="frame"><figcaption class="header"></figcaption><pre data-language="text"><code><div class="ec-line"><div class="code"><span style="--0:#24292e;--1:#e1e4e8">节点坐标          10,000 × 3</span></div></div><div class="ec-line"><div class="code"><span style="--0:#24292e;--1:#e1e4e8">节点位移          10,000 × 3    → Point Data</span></div></div><div class="ec-line"><div class="code"><span style="--0:#24292e;--1:#e1e4e8">节点温度          10,000 × 1    → Point Data</span></div></div><div class="ec-line"><div class="code"><span style="--0:#24292e;--1:#e1e4e8">单元等效应力       5,000 × 1    → Cell Data</span></div></div><div class="ec-line"><div class="code"><span style="--0:#24292e;--1:#e1e4e8">单元材料编号       5,000 × 1    → Cell Data</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="节点坐标          10,000 × 3节点位移          10,000 × 3    → Point Data节点温度          10,000 × 1    → Point Data单元等效应力       5,000 × 1    → Cell Data单元材料编号       5,000 × 1    → Cell Data"><div></div></button></div></figure></div>
+<p>ParaView 可以把单元数据转换成点数据，便于插值和显示。但转换通常涉及平均或插值，<strong>可能改变局部峰值和区域交界处的表现</strong>。</p>
+<p>有限元中的应力还可能原本位于<strong>积分点（高斯点）</strong>。导出时需要明确保留积分点数据，还是先外推、平均到节点或单元；这会影响后处理中看到的结果。</p>
+<h2 id="3-常见文件格式">3. 常见文件格式</h2>
+<p>ParaView 通过相应的 Reader（读取器）识别不同格式，再转换成内部的 VTK 数据对象。</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>格式</th><th>常见扩展名／入口</th><th>典型内容和用途</th></tr></thead><tbody><tr><td>VTK Legacy</td><td><code>.vtk</code></td><td>网格及物理量，较早的通用格式</td></tr><tr><td>VTK XML 非结构网格</td><td><code>.vtu</code></td><td>四面体、六面体等网格及点／单元数据，适合很多 FEM、CFD 结果</td></tr><tr><td>VTK XML 其他网格</td><td><code>.vtp</code>、<code>.vti</code>、<code>.vts</code>、<code>.vtr</code></td><td>表面网格、规则体数据、结构网格等</td></tr><tr><td>VTK 并行／组合／时序入口</td><td><code>.pvtu</code>、<code>.vtm</code>、<code>.pvd</code>、<code>.series</code> 等</td><td>引用分区文件、多个数据块或多个时间步</td></tr><tr><td>VTKHDF</td><td><code>.vtkhdf</code></td><td>按 VTKHDF 规范组织的 HDF5 数据</td></tr><tr><td>Exodus II</td><td><code>.e</code>、<code>.exo</code>、<code>.ex2</code> 等</td><td>有限元网格、结果变量、集合和时间步</td></tr><tr><td>EnSight</td><td><code>.case</code>，以及引用的数据文件</td><td>几何、物理量和时间序列</td></tr><tr><td>CGNS</td><td><code>.cgns</code></td><td>常见于 CFD，包含网格、分区及流场等</td></tr><tr><td>OpenFOAM</td><td>通常通过 <code>.foam</code> 入口打开算例目录</td><td>网格、边界区域及各时间目录中的场数据</td></tr><tr><td>XDMF</td><td><code>.xdmf</code>、<code>.xmf</code>，常配合 HDF5</td><td>描述网格、属性及其实际存储位置</td></tr></tbody></table>
+<p>有些格式把全部信息放在一个文件里，有些采用“<strong>入口文件 + 网格文件 + 结果文件</strong>”的组合。例如 <code>.pvtu</code> 通常引用多个 <code>.vtu</code> 分区文件，不能只复制入口文件。</p>
+<p>具体可用读取器取决于 ParaView 的版本、构建选项和插件。HDF5 是存储容器，自定义 <code>.h5</code> 文件需要配套的数据组织规范或读取器。</p>
+<h2 id="4-以悬臂梁计算结果为例">4. 以悬臂梁计算结果为例</h2>
+<p>求解器导出的结果可以包含：</p>
+<ul>
+<li>梁的节点坐标，以及四面体或六面体单元。</li>
+<li>每个节点的位移 <code>Displacement</code>。</li>
+<li>每个单元或节点的应力分量，以及可选的 <code>VonMises</code> 等效应力。</li>
+<li>每个载荷步对应的结果。</li>
+<li>固定端、加载端和不同材料区域的集合标识。</li>
+</ul>
+<p>在 ParaView 中就可以：</p>
+<ul>
+<li>选择 <code>VonMises</code> 着色，查看应力分布。</li>
+<li>用 <code>Warp By Vector</code> 根据位移显示变形。</li>
+<li>沿一条线提取应力或位移曲线。</li>
+<li>按载荷步播放变形动画。</li>
+</ul>
+<p>这里有两个解释数据时需要核实的细节：</p>
+<ol>
+<li><strong>单位和坐标系需要由文件元数据或导出约定明确</strong>，ParaView 通常不能仅凭数值推断。</li>
+<li><strong>如果读取器已经把位移应用到坐标上，再做一次变形会重复叠加。</strong></li>
+</ol>
+<h2 id="5-对应源码">5. 对应源码</h2>
+<ul>
+<li><a href="https://github.com/Kitware/VTK/blob/master/Common/DataModel/vtkDataSet.h">vtkDataSet.h</a>：明确定义了“几何、拓扑和属性数据”的模型。</li>
+<li><a href="https://github.com/Kitware/ParaView/blob/master/Remoting/Application/Resources/readers_ioxml.xml">VTK XML 读取器配置</a>：展示了文件如何暴露点数据、单元数据和时间步，供 ParaView 后续分析使用。</li>
+</ul><footer class="article-footer"><a class="section-link" href="/blog/">← 返回全部文章</a></footer></article><section id="comments" class="comments-section" aria-labelledby="comments-heading" data-pagefind-ignore data-comments data-path="/blog/paraview-01-post-processing/" data-allow-management="false" data-mode="guest"><div class="comments-heading"><h2 id="comments-heading">留言</h2></div><p class="comments-hint">写下想说的话，系统会为这条留言随机分配昵称。</p><div class="comments-status" role="status" aria-live="polite"><p data-comments-status>正在加载留言…</p><button class="button" type="button" data-comments-retry hidden>重新加载</button></div><div id="comments-widget" class="comments-widget" aria-busy="true" hidden></div><noscript><p>请启用 JavaScript 后查看和发送留言。</p></noscript></section><script type="module" src="/_astro/Comments.astro_astro_type_script_index_0_lang.hBFNnLuT.js"></script></div><aside class="article-toc" data-pagefind-ignore><h2>文章目录</h2><ol><li data-depth="2"><a href="#1-数据中包含什么信息">1. 数据中包含什么信息</a></li><li data-depth="2"><a href="#2-物理量放在哪里point-data-与-cell-data">2. 物理量放在哪里：Point Data 与 Cell Data</a></li><li data-depth="2"><a href="#3-常见文件格式">3. 常见文件格式</a></li><li data-depth="2"><a href="#4-以悬臂梁计算结果为例">4. 以悬臂梁计算结果为例</a></li><li data-depth="2"><a href="#5-对应源码">5. 对应源码</a></li></ol></aside></div><script type="module" src="/_astro/_slug_.astro_astro_type_script_index_0_lang.CH1eZcDZ.js"></script></main><footer class="site-footer" data-pagefind-ignore><div class="container footer-inner"><span>© 2026 阿左 · 记录技术，探索未来。</span><div class="footer-links"><a class="social-link" href="https://github.com/zuocaoli" target="_blank" rel="noreferrer"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-3.9c.04-1-.35-2-1-2.7 3.2-.35 6.6-1.6 6.6-7.1A5.5 5.5 0 0 0 19.1 4.4 5.1 5.1 0 0 0 19 1s-1.2-.4-4 1.5a13.7 13.7 0 0 0-7 0C5.2.6 4 1 4 1a5.1 5.1 0 0 0-.1 3.4 5.5 5.5 0 0 0-1.5 3.9c0 5.5 3.4 6.7 6.6 7.1-.5.5-.8 1.1-1 1.8-.1.7-.1 3.8-.1 4.8M8 19c-3 .9-3-1.7-4.2-2.1"></path></svg>GitHub</a><a class="social-link" href="/rss.xml"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11a9 9 0 0 1 9 9M4 4a16 16 0 0 1 16 16"></path><circle cx="5" cy="19" r="1" fill="currentColor"></circle></svg>RSS</a><span>做一个更好的工程师</span></div></div></footer></body></html>

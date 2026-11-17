@@ -1,0 +1,116 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width"><meta name="generator" content="Astro v7.4.12"><meta name="description" content="梳理公式失败与阻塞的状态传播，以及引用修复、对象删除、订阅管理和模型保存恢复。"><meta name="theme-color" content="#fbfdff"><link rel="icon" type="image/png" href="/favicon.png"><link rel="canonical" href="https://zcli.netlify.app/blog/cad-expression-engine-05-errors-and-lifecycle/"><link rel="alternate" type="application/rss+xml" title="阿左 RSS" href="/rss.xml"><meta property="og:type" content="article"><meta property="og:title" content="CAD 表达式引擎设计（5） · 错误恢复与模型生命周期 · 阿左"><meta property="og:description" content="梳理公式失败与阻塞的状态传播，以及引用修复、对象删除、订阅管理和模型保存恢复。"><meta property="og:url" content="https://zcli.netlify.app/blog/cad-expression-engine-05-errors-and-lifecycle/"><meta property="og:image" content="https://zcli.netlify.app/images/hero-mountains-v3.png"><meta name="twitter:card" content="summary_large_image"><title>CAD 表达式引擎设计（5） · 错误恢复与模型生命周期 · 阿左</title><script>
+      (() => {
+        const saved = localStorage.getItem('theme');
+        const theme = saved === 'dark' || saved === 'light' ? saved : (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.dataset.theme = theme;
+      })();
+    </script><script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"CAD 表达式引擎设计（5） · 错误恢复与模型生命周期","description":"梳理公式失败与阻塞的状态传播，以及引用修复、对象删除、订阅管理和模型保存恢复。","datePublished":"2026-03-01T00:00:00.000Z","dateModified":"2026-03-01T00:00:00.000Z","inLanguage":"zh-CN","url":"https://zcli.netlify.app/blog/cad-expression-engine-05-errors-and-lifecycle/"}</script><link rel="stylesheet" href="/_astro/Comments.BZd4ZNvt.css"><link rel="stylesheet" href="/_astro/BaseLayout.5yRULZVq.css"></head><body><header class="site-header" data-pagefind-ignore><div class="container header-inner"><a class="brand" href="/" aria-label="阿左首页">阿左</a><nav class="site-nav" id="site-nav" aria-label="主导航"><a class="nav-link" href="/">首页</a><a class="nav-link" href="/blog/" aria-current="page">博客</a><a class="nav-link" href="/projects/">项目</a><a class="nav-link" href="/topics/">专题</a><a class="nav-link" href="/guestbook/">留言板</a><a class="nav-link" href="/about/">关于</a></nav><div class="header-actions"><a class="icon-button" href="/search/" aria-label="搜索"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.2-3.2"></path></svg></a><button class="icon-button" id="theme-toggle" type="button" aria-label="切换深色模式"><span class="theme-icon-moon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A8.3 8.3 0 1 1 11.2 3 6.5 6.5 0 0 0 21 12.8Z"></path></svg></span><span class="theme-icon-sun" hidden><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.66 6.34l1.41-1.41"></path></svg></span></button><button class="icon-button menu-button" id="menu-toggle" type="button" aria-label="打开导航" aria-controls="site-nav" aria-expanded="false"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"></path></svg></button></div></div></header><script type="module">var e=document.querySelector(`#menu-toggle`),t=document.querySelector(`#site-nav`);e?.addEventListener(`click`,()=>{let n=t?.dataset.open!==`true`;t&&(t.dataset.open=String(n)),e.setAttribute(`aria-expanded`,String(n))});var n=document.querySelector(`#theme-toggle`),r=()=>{let e=document.documentElement.dataset.theme===`dark`;document.querySelector(`.theme-icon-moon`)?.toggleAttribute(`hidden`,e),document.querySelector(`.theme-icon-sun`)?.toggleAttribute(`hidden`,!e),n?.setAttribute(`aria-label`,e?`切换浅色模式`:`切换深色模式`)};r(),n?.addEventListener(`click`,()=>{let e=document.documentElement.dataset.theme===`dark`?`light`:`dark`;document.documentElement.dataset.theme=e,localStorage.setItem(`theme`,e),r()});</script><main class="page-main"><div class="article-shell"><div class="article-main"><article class="article-content" data-pagefind-body><header class="article-header"><span class="eyebrow">参数化特征建模</span><h1 data-pagefind-meta="title">CAD 表达式引擎设计（5） · 错误恢复与模型生命周期</h1><div class="article-meta"><time datetime="2026-03-01T00:00:00.000Z">2026-03-01</time><span class="tag">表达式引擎</span><span class="tag">错误恢复</span><span class="tag">生命周期</span><span class="tag">模型存储</span></div><p class="article-description">梳理公式失败与阻塞的状态传播，以及引用修复、对象删除、订阅管理和模型保存恢复。</p></header><p>在 CAD 模型中，用户会暂时输入无法计算的公式，也会删除其他参数正在引用的对象。我关心系统在这些编辑过程中如何表达结果是否可用，以及修复操作如何重新打通计算链。</p>
+<p>我会为属性维护有效状态，通过受控读取把结果交给下游，并用稳定的对象身份处理引用的生命周期。</p>
+<h2 id="属性需要同时记录数值与有效状态">属性需要同时记录数值与有效状态</h2>
+<p>对象 A 的宽度绑定 <code>length / (segments - 1)</code>，面积绑定 <code>length * width</code>。当 <code>segments</code> 从 2 变为 1，输入自身仍满足正整数校验，宽度公式却会除零。</p>
+<p>此时可以保留宽度和面积之前的缓存数值，并通过独立状态表记录当前可用性。</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>状态</th><th>含义</th></tr></thead><tbody><tr><td><code>Valid</code></td><td>当前结果有效，可以交给调用者</td></tr><tr><td><code>Dirty</code></td><td>已受变化影响，等待重新计算</td></tr><tr><td><code>Failed</code></td><td>已尝试求值，求值失败或写回被拒绝</td></tr><tr><td><code>Blocked</code></td><td>直接输入处于无效状态，当前目标等待修复</td></tr><tr><td><code>MissingReference</code></td><td>直接引用的对象或属性已经缺失</td></tr></tbody></table>
+<p>状态保存为 <code>PropertyStatus {state, reason}</code>，由对象 ID 与属性名组成的 <code>PropertyKey</code> 索引。把缓存读取记为 <code>stored_value()</code>，把提供有效结果的读取记为 <code>value()</code>，后者在状态为 <code>Valid</code> 时才返回数值。</p>
+<div class="expressive-code"><link rel="stylesheet" href="/_astro/ec.z7juk.css"><script type="module" src="/_astro/ec.0vx5m.js"></script><figure class="frame"><figcaption class="header"></figcaption><pre data-language="text"><code><div class="ec-line"><div class="code"><span style="--0:#24292e;--1:#e1e4e8">function value(key):</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#24292e;--1:#e1e4e8">    </span></span><span style="--0:#24292e;--1:#e1e4e8">if key does not identify an existing property:</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#24292e;--1:#e1e4e8">        </span></span><span style="--0:#24292e;--1:#e1e4e8">return unavailable</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#24292e;--1:#e1e4e8">    </span></span><span style="--0:#24292e;--1:#e1e4e8">if status[key].state != Valid:</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#24292e;--1:#e1e4e8">        </span></span><span style="--0:#24292e;--1:#e1e4e8">return unavailable</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#24292e;--1:#e1e4e8">    </span></span><span style="--0:#24292e;--1:#e1e4e8">return stored_value(key)</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="function value(key):    if key does not identify an existing property:        return unavailable    if status[key].state != Valid:        return unavailable    return stored_value(key)"><div></div></button></div></figure></div>
+<p>界面可以通过缓存读取展示历史数值与错误提示，后续计算通过受控读取获取可用结果。</p>
+<h2 id="按依赖关系隔离失败">按依赖关系隔离失败</h2>
+<p>每个目标执行前，协调器先检查直接输入。引用缺失时进入 <code>MissingReference</code>，引用存在但状态无效时进入 <code>Blocked</code>，条件满足后才执行 AST。</p>
+<p>单个目标的处理可以写成下面的伪代码。<code>finish()</code> 记录状态、原因与执行次数，<code>parents[target]</code> 表示该目标的全部直接输入。</p>
+<div class="expressive-code"><figure class="frame"><figcaption class="header"></figcaption><pre data-language="text"><code><div class="ec-line"><div class="code"><span style="--0:#24292e;--1:#e1e4e8">function process(target):</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#24292e;--1:#e1e4e8">    </span></span><span style="--0:#24292e;--1:#e1e4e8">inputs = parents[target]</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#24292e;--1:#e1e4e8">    </span></span><span style="--0:#24292e;--1:#e1e4e8">if any input property is missing:</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#24292e;--1:#e1e4e8">        </span></span><span style="--0:#24292e;--1:#e1e4e8">return finish(target, MissingReference, executions=0)</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#24292e;--1:#e1e4e8">    </span></span><span style="--0:#24292e;--1:#e1e4e8">if any input status is not Valid:</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#24292e;--1:#e1e4e8">        </span></span><span style="--0:#24292e;--1:#e1e4e8">return finish(target, Blocked, executions=0)</span></div></div><div class="ec-line"><div class="code">
+</div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#24292e;--1:#e1e4e8">    </span></span><span style="--0:#24292e;--1:#e1e4e8">result = evaluate(binding[target].tree, resolve_valid_input)</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#24292e;--1:#e1e4e8">    </span></span><span style="--0:#24292e;--1:#e1e4e8">if result is an error:</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#24292e;--1:#e1e4e8">        </span></span><span style="--0:#24292e;--1:#e1e4e8">return finish(target, Failed, executions=1)</span></div></div><div class="ec-line"><div class="code">
+</div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#24292e;--1:#e1e4e8">    </span></span><span style="--0:#24292e;--1:#e1e4e8">assigned = property_set(target, result.value)</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#24292e;--1:#e1e4e8">    </span></span><span style="--0:#24292e;--1:#e1e4e8">if assigned is Changed or Unchanged:</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#24292e;--1:#e1e4e8">        </span></span><span style="--0:#24292e;--1:#e1e4e8">return finish(target, Valid, executions=1)</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#24292e;--1:#e1e4e8">    </span></span><span style="--0:#24292e;--1:#e1e4e8">return finish(target, Failed, executions=1)</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="function process(target):    inputs = parents[target]    if any input property is missing:        return finish(target, MissingReference, executions=0)    if any input status is not Valid:        return finish(target, Blocked, executions=0)    result = evaluate(binding[target].tree, resolve_valid_input)    if result is an error:        return finish(target, Failed, executions=1)    assigned = property_set(target, result.value)    if assigned is Changed or Unchanged:        return finish(target, Valid, executions=1)    return finish(target, Failed, executions=1)"><div></div></button></div></figure></div>
+<p><code>resolve_valid_input</code> 按绑定中的变量映射定位属性，再调用 <code>value()</code> 读取。<code>property_set()</code> 经过属性校验后提交结果，求值或校验失败时保留旧缓存。</p>
+<p>在上面的除零场景中，A 的宽度为 <code>Failed</code>，执行次数为 1，A 的面积为 <code>Blocked</code>，执行次数为 0。若对象 B 的宽度只依赖 A 的 <code>segments</code>，其输入仍然有效，这条分支可以继续成功计算。</p>
+<p>执行循环会逐项记录结果，单个目标失败后继续处理其他目标。用户因此能够看到出错参数及其下游，同时继续使用有效分支。</p>
+<h2 id="修复由相关变化重新启动">修复由相关变化重新启动</h2>
+<p>把 <code>segments</code> 从 1 改为 3，宽度和面积重新进入 <code>Dirty</code>，再按拓扑顺序执行。长度为 100 时，恢复后的宽度为 50，面积为 5000。</p>
+<p>修复绑定同样会标记目标与下游，常量公式也会主动标记目标本身。成功写回返回 <code>Changed</code> 或 <code>Unchanged</code>，都会恢复为 <code>Valid</code>。</p>
+<p>这套调度策略在每轮结束时清除处理过的脏任务。失败状态由状态表保留，相关输入真正变化或绑定被修复时，再产生新的重算任务。界面可据此围绕错误原因引导修改。</p>
+<h2 id="删除对象前先收集影响">删除对象前先收集影响</h2>
+<p>对象删除需要先利用完整依赖图确定下游，再按以下顺序处理。</p>
+<ol>
+<li>遍历对象属性，把所有受影响的下游目标标脏。</li>
+<li>移除对象自身的公式、待办任务、状态和订阅，再删除对象。</li>
+<li>保留其他对象公式指向旧属性键的引用关系。</li>
+<li>执行受影响目标，将直接使用者标为 <code>MissingReference</code>，其下游标为 <code>Blocked</code>。</li>
+</ol>
+<p>保留旧属性键让错误仍然指向原来的依赖身份。对象 ID 单调分配，新建对象获得新 ID，通过显式修改别名映射并重新绑定，用户可以确认新的数据来源。</p>
+<p>解绑公式则清除目标对上游的依赖，保留它的当前数值与下游引用，并将其恢复为普通输入，再安排下游更新。</p>
+<h2 id="通知订阅也参与生命周期管理">通知订阅也参与生命周期管理</h2>
+<p>引擎可以把领域对象与它的变化订阅连接存入同一条管理记录。连接采用可移动、独占退订责任的 RAII 对象，析构时断开订阅。</p>
+<p>发布者持有订阅状态的强引用，连接持有弱引用。发布者先销毁时，连接仍可安全析构。发送通知时复制订阅列表快照，逐项检查有效状态，并捕获回调异常，继续通知其他订阅者。</p>
+<p>这使对象删除、订阅断开和同步回调遍历有明确的所有权规则。</p>
+<h2 id="保存恢复需要保留设计定义">保存恢复需要保留设计定义</h2>
+<p>保存模型时，需要记录稳定对象身份、属性类型和值、公式原文，以及跨对象引用的映射。下面用精简 JSON 示意一条公式的保存内容，<code>target</code> 指向对象 2 的宽度，别名映射到对象 1 的长度。</p>
+<div class="expressive-code"><figure class="frame"><figcaption class="header"></figcaption><pre data-language="json"><code><div class="ec-line"><div class="code"><span style="--0:#24292E;--1:#E1E4E8">{</span></div></div><div class="ec-line"><div class="code"><span class="indent">  </span><span style="--0:#005CC5;--1:#79B8FF">"target"</span><span style="--0:#24292E;--1:#E1E4E8">: {</span><span style="--0:#005CC5;--1:#79B8FF">"object"</span><span style="--0:#24292E;--1:#E1E4E8">: </span><span style="--0:#005CC5;--1:#79B8FF">2</span><span style="--0:#24292E;--1:#E1E4E8">, </span><span style="--0:#005CC5;--1:#79B8FF">"property"</span><span style="--0:#24292E;--1:#E1E4E8">: </span><span style="--0:#032F62;--1:#9ECBFF">"width"</span><span style="--0:#24292E;--1:#E1E4E8">},</span></div></div><div class="ec-line"><div class="code"><span class="indent">  </span><span style="--0:#005CC5;--1:#79B8FF">"source"</span><span style="--0:#24292E;--1:#E1E4E8">: </span><span style="--0:#032F62;--1:#9ECBFF">"source_length / 2"</span><span style="--0:#24292E;--1:#E1E4E8">,</span></div></div><div class="ec-line"><div class="code"><span class="indent">  </span><span style="--0:#005CC5;--1:#79B8FF">"aliases"</span><span style="--0:#24292E;--1:#E1E4E8">: {</span></div></div><div class="ec-line"><div class="code"><span class="indent">    </span><span style="--0:#005CC5;--1:#79B8FF">"source_length"</span><span style="--0:#24292E;--1:#E1E4E8">: {</span><span style="--0:#005CC5;--1:#79B8FF">"object"</span><span style="--0:#24292E;--1:#E1E4E8">: </span><span style="--0:#005CC5;--1:#79B8FF">1</span><span style="--0:#24292E;--1:#E1E4E8">, </span><span style="--0:#005CC5;--1:#79B8FF">"property"</span><span style="--0:#24292E;--1:#E1E4E8">: </span><span style="--0:#032F62;--1:#9ECBFF">"length"</span><span style="--0:#24292E;--1:#E1E4E8">}</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#24292E;--1:#E1E4E8">  </span></span><span style="--0:#24292E;--1:#E1E4E8">}</span></div></div><div class="ec-line"><div class="code"><span style="--0:#24292E;--1:#E1E4E8">}</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="{  &#x22;target&#x22;: {&#x22;object&#x22;: 2, &#x22;property&#x22;: &#x22;width&#x22;},  &#x22;source&#x22;: &#x22;source_length / 2&#x22;,  &#x22;aliases&#x22;: {    &#x22;source_length&#x22;: {&#x22;object&#x22;: 1, &#x22;property&#x22;: &#x22;length&#x22;}  }}"><div></div></button></div></figure></div>
+<p>模型文件还需要保存对象 1 和对象 2 的定义与输入属性。AST 可以由原文重建，依赖图可以由 AST 和别名映射重建，计算状态则在加载后的校验与重算中重新确认。最近成功结果可以作为缓存保存，供加载过程中的界面展示。</p>
+<p>加载顺序需要考虑跨对象引用。我会先创建所有对象并恢复稳定 ID，再通过属性校验恢复输入值，随后解析全部公式、恢复引用、检查整张图，最后统一重算。多条公式可以在这一阶段一起完成准备，等引用关系齐全后再发布模型。</p>
+<div class="expressive-code"><figure class="frame"><figcaption class="header"></figcaption><pre data-language="text"><code><div class="ec-line"><div class="code"><span style="--0:#24292e;--1:#e1e4e8">function load_model(snapshot):</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#24292e;--1:#e1e4e8">    </span></span><span style="--0:#24292e;--1:#e1e4e8">model = create_all_objects(snapshot.objects)</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#24292e;--1:#e1e4e8">    </span></span><span style="--0:#24292e;--1:#e1e4e8">restore_and_validate_inputs(model, snapshot.values)</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#24292e;--1:#e1e4e8">    </span></span><span style="--0:#24292e;--1:#e1e4e8">bindings = parse_and_resolve_all(model, snapshot.formulas)</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#24292e;--1:#e1e4e8">    </span></span><span style="--0:#24292e;--1:#e1e4e8">graph = build_and_validate_graph(bindings)</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#24292e;--1:#e1e4e8">    </span></span><span style="--0:#24292e;--1:#e1e4e8">model.install(bindings, graph)</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#24292e;--1:#e1e4e8">    </span></span><span style="--0:#24292e;--1:#e1e4e8">model.mark_all_formula_targets_dirty()</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#24292e;--1:#e1e4e8">    </span></span><span style="--0:#24292e;--1:#e1e4e8">model.recompute()</span></div></div><div class="ec-line"><div class="code"><span class="indent"><span style="--0:#24292e;--1:#e1e4e8">    </span></span><span style="--0:#24292e;--1:#e1e4e8">return model</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="function load_model(snapshot):    model = create_all_objects(snapshot.objects)    restore_and_validate_inputs(model, snapshot.values)    bindings = parse_and_resolve_all(model, snapshot.formulas)    graph = build_and_validate_graph(bindings)    model.install(bindings, graph)    model.mark_all_formula_targets_dirty()    model.recompute()    return model"><div></div></button></div></figure></div>
+<p>对象定义、输入、公式解析和图校验中的错误会中止加载，并返回具体原因。通过这些检查后，重算中的求值失败按前述状态规则记录，以便用户打开模型后修复公式。</p>
+<p>数值序列化还需要保证往返精度。使用 C++ 文本流时，可以固定经典 locale，并以 <code>max_digits10</code> 输出浮点数。字符串则由格式对应的转义规则处理，确保公式中的字符能完整恢复。</p>
+<h2 id="继续扩展时沿模块边界接入">继续扩展时沿模块边界接入</h2>
+<p>面向更完整的 CAD 平台，可以沿现有职责继续增加能力。</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>能力</th><th>主要设计落点</th></tr></thead><tbody><tr><td>单位与量纲</td><td>值表示、运算规则、单位换算</td></tr><tr><td>数学函数与条件表达式</td><td>Token、AST 节点、函数签名与求值语义</td></tr><tr><td>更丰富的属性引用语法</td><td>解析器、稳定身份解析与文档链接</td></tr><tr><td>编辑补全与错误定位</td><td>名称查询、公式中的字符位置、诊断接口</td></tr><tr><td>几何重建和分析数据更新</td><td>有效参数提交后的文档更新流程</td></tr><tr><td>撤销与重做</td><td>文档命令、属性与绑定操作的历史管理</td></tr></tbody></table>
+<p>我会围绕公式定义、属性身份、依赖关系、结果状态和执行时机审视这些扩展。各模块保持清晰的输入输出，才能把语言能力与模型生命周期逐步装配起来。</p><footer class="article-footer"><a class="section-link" href="/blog/">← 返回全部文章</a></footer></article><section id="comments" class="comments-section" aria-labelledby="comments-heading" data-pagefind-ignore data-comments data-path="/blog/cad-expression-engine-05-errors-and-lifecycle/" data-allow-management="false" data-mode="guest"><div class="comments-heading"><h2 id="comments-heading">留言</h2></div><p class="comments-hint">写下想说的话，系统会为这条留言随机分配昵称。</p><div class="comments-status" role="status" aria-live="polite"><p data-comments-status>正在加载留言…</p><button class="button" type="button" data-comments-retry hidden>重新加载</button></div><div id="comments-widget" class="comments-widget" aria-busy="true" hidden></div><noscript><p>请启用 JavaScript 后查看和发送留言。</p></noscript></section><script type="module" src="/_astro/Comments.astro_astro_type_script_index_0_lang.hBFNnLuT.js"></script></div><aside class="article-toc" data-pagefind-ignore><h2>文章目录</h2><ol><li data-depth="2"><a href="#属性需要同时记录数值与有效状态">属性需要同时记录数值与有效状态</a></li><li data-depth="2"><a href="#按依赖关系隔离失败">按依赖关系隔离失败</a></li><li data-depth="2"><a href="#修复由相关变化重新启动">修复由相关变化重新启动</a></li><li data-depth="2"><a href="#删除对象前先收集影响">删除对象前先收集影响</a></li><li data-depth="2"><a href="#通知订阅也参与生命周期管理">通知订阅也参与生命周期管理</a></li><li data-depth="2"><a href="#保存恢复需要保留设计定义">保存恢复需要保留设计定义</a></li><li data-depth="2"><a href="#继续扩展时沿模块边界接入">继续扩展时沿模块边界接入</a></li></ol></aside></div><script type="module" src="/_astro/_slug_.astro_astro_type_script_index_0_lang.CH1eZcDZ.js"></script></main><footer class="site-footer" data-pagefind-ignore><div class="container footer-inner"><span>© 2026 阿左 · 记录技术，探索未来。</span><div class="footer-links"><a class="social-link" href="https://github.com/zuocaoli" target="_blank" rel="noreferrer"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-3.9c.04-1-.35-2-1-2.7 3.2-.35 6.6-1.6 6.6-7.1A5.5 5.5 0 0 0 19.1 4.4 5.1 5.1 0 0 0 19 1s-1.2-.4-4 1.5a13.7 13.7 0 0 0-7 0C5.2.6 4 1 4 1a5.1 5.1 0 0 0-.1 3.4 5.5 5.5 0 0 0-1.5 3.9c0 5.5 3.4 6.7 6.6 7.1-.5.5-.8 1.1-1 1.8-.1.7-.1 3.8-.1 4.8M8 19c-3 .9-3-1.7-4.2-2.1"></path></svg>GitHub</a><a class="social-link" href="/rss.xml"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11a9 9 0 0 1 9 9M4 4a16 16 0 0 1 16 16"></path><circle cx="5" cy="19" r="1" fill="currentColor"></circle></svg>RSS</a><span>做一个更好的工程师</span></div></div></footer></body></html>
